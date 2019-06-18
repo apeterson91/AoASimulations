@@ -1,4 +1,4 @@
-#' generates nonhomogenous poisson process data
+#' generates matern cluster process data
 #'
 #' @param seed an integer for set.seed()
 #' @param num_subj number of subjects to simulate
@@ -8,27 +8,31 @@
 #' @param bef_ylim y coordinate bounds from which to simulate bef positions
 #' @param subj_xlim x coordinate bounds from which to simulate subject positions
 #' @param subj_ylim y coordinate bounds from which to simulate subject positions
-#' @param inten intensity function for nhpp as a function of spatial coords (x,y)
+#' @param inten intensity function for nhpp as a function of spatial coords (x,y) - passed to rMatClust
+#' @param scale matern process kappa parameter - passed to rMatClust
+#' @param mu Mean number of points per cluster - passed to rMatClust
 #' @param alpha true intercept value
 #' @param delta confounder effect
 #' @param beta true bef effect
 #' @param theta true spatial scale
 #' @param W weight function
-generate_nhpp_dataset <- function(seed = NULL,
-                                 num_subj_sim = 1,
-                                 num_bef_sim = 1,
-                                 Lambda_xy = function(x,y){ 20 - x^2 -y^2 },
-                                 max_dist = 5L,
-                                 bef_xlim = c(-1,1),
-                                 bef_ylim=c(-1,1),
-                                 subj_xlim = c(-1,1),
-                                 subj_ylim = c(-1,1),
-                                 alpha = 25,
-                                 delta = -2.3,
-                                 beta = .1,
-                                 theta = 0.5,
-                                 sigma = 1,
-                                 W = function(x) exp(-x)){
+generate_matern_dataset <- function(seed = NULL,
+                                  num_subj_sim = 1,
+                                  num_bef_sim = 1,
+                                  Lambda_xy = function(x,y){ 20 - x^2 -y^2 },
+                                  scale = 1,
+                                  mu = 1,
+                                  max_dist = 5L,
+                                  bef_xlim = c(-1,1),
+                                  bef_ylim=c(-1,1),
+                                  subj_xlim = c(-1,1),
+                                  subj_ylim = c(-1,1),
+                                  alpha = 25,
+                                  delta = -2.3,
+                                  beta = .1,
+                                  theta = 0.5,
+                                  sigma = 1,
+                                  W = function(x) exp(-x)){
 
     if(!is.null(seed))
         set.seed(seed)
@@ -40,16 +44,20 @@ generate_nhpp_dataset <- function(seed = NULL,
         stop("xlim and ylim should both be vectors of length 2")
 
     bef_window <- spatstat::as.owin(list(xmin=bef_xlim[1],xmax=bef_xlim[2],
-                           ymin=bef_ylim[1],ymax=bef_xlim[2]))
+                                         ymin=bef_ylim[1],ymax=bef_xlim[2]))
 
     subj_window <- spatstat::as.owin(list(xmin=subj_xlim[1],xmax=subj_xlim[2],
                                           ymin=subj_ylim[1],ymax=subj_xlim[2]))
 
-    bef_points <- spatstat::rpoispp(lambda =Lambda_xy,
+    bef_points <- spatstat::rMatClust(kappa = Lambda_xy,
+                                     scale = scale,
+                                     mu = mu,
                                     win = bef_window,
                                     nsim = num_bef_sim)
 
-    subj_points <- spatstat::rpoispp(lambda = Lambda_xy,
+    subj_points <- spatstat::rMatClust(kappa = Lambda_xy,
+                                     scale = scale,
+                                     mu = mu,
                                      win = subj_window,
                                      nsim = num_subj_sim)
 
@@ -58,12 +66,12 @@ generate_nhpp_dataset <- function(seed = NULL,
                                       y = bef_points$y)
     else
         bef_posdata <-  tibble::tibble(x= unlist(purrr::map(bef_points,function(z) z[["x"]])),
-                            y = unlist(purrr::map(bef_points,function(z) z[["y"]])))
+                                       y = unlist(purrr::map(bef_points,function(z) z[["y"]])))
 
     if(num_subj_sim==1){
         subj_data <- tibble::tibble(x_coord = subj_points$x,
                                     y_coord = subj_points$y) %>%
-        dplyr::mutate(subj_id = 1:dplyr::n())
+            dplyr::mutate(subj_id = 1:dplyr::n())
     }
     else{
         subj_data <- tibble::tibble(x_coord = unlist(purrr::map(subj_points,function(z) z[["x"]])),

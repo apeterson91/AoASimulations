@@ -1,22 +1,34 @@
-
-library(rstap)
-
+#' check coverage
+#'
+#' @param model stapreg object from rstap package
+#' @param true_par a named vector with the true parameter values as elements
+#' @param prob probability value in (0,1)
+#' @param nonzero logical indicating zero should not be in the posterior interval
 check_coverage <- function(model,true_par,prob = .90,nonzero = T){
-    if(!all(names(true_par)%in%rownames(posterior_interval(model))))
+    if(!all(names(true_par)%in%rownames(rstap::posterior_interval(model))))
         stop("Parameter"," ", names(true_par)," ","Not included in model, please try again")
-    CI <- posterior_interval(model,par = names(true_par),prob = prob)
+    CI <- rstap::posterior_interval(model,par = names(true_par),prob = prob)
     if(nonzero)
         return( (CI[1]<=true_par && CI[2]>=true_par) && ( CI[2]<=0 || CI[1]>=0  ))
     else
         return((CI[1]<=true_par && CI[2]>=true_par))
 }
 
+#' calculate interval length
+#'
+#' @param model stapreg object from rstap package
+#' @param par parameter names as vector of strings
+#' @param prob scalar numeric in (0,1)
+#'
 interval_length <- function(model,par,prob = .95){
-    ci <- posterior_interval(model,pars=par)
+    ci <- rstap::posterior_interval(model,pars=par)
     return(median(ci[,2]-ci[,1]))
 }
 
-
+#' calculate Median Root Mean Square Error
+#'
+#' @param model stapreg object from rstap package
+#'
 calculate_RMSE_median <- function(model){
     mean(sqrt((residuals(model))^2))
 }
