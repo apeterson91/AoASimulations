@@ -10,7 +10,7 @@ create_table_one(num_sims = 5, n = 300, num_MESA_subj = 100,
   25, autoscale = F), beta_prior = rstap::normal(),
   theta_prior = rstap::log_normal(location = 1, scale = 1),
   delta_prior = rstap::normal(), iter = 2000, warmup = 1000,
-  cores = 1, chains = 1, seed = NULL, file = NULL)
+  chains = 1, cores = 1, file = NULL)
 }
 \arguments{
 \item{num_sims}{number of simulations to run}
@@ -34,6 +34,16 @@ create_table_one(num_sims = 5, n = 300, num_MESA_subj = 100,
 \item{theta_prior}{prior to be placed on spatial scale}
 
 \item{delta_prior}{prior to be placed on simulated binary covariate effect}
+
+\item{iter}{number of iterations for which to run the stap_glm or stapdnd_glmer sampler}
+
+\item{warmup}{number of iterations to warmup the sampler}
+
+\item{chains}{number of independent MCMC chains to draw}
+
+\item{cores}{number of cores with which to run chains in parallel}
+
+\item{file}{path to file to save tables to in .tex format}
 }
 \value{
 list of two table components table1_top -
