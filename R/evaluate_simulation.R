@@ -33,6 +33,26 @@ calculate_RMSE_median <- function(model){
     mean(sqrt((residuals(model))^2))
 }
 
+#' calculate C&G validation statistic
+#'
+#' @param model stapreg object from rstap package
+#' @param par named vector
+#'
+calculate_CG_stat <- function(model,par,mer=FALSE){
+    nm <- names(par)
+    if(length(nm)>1)
+        stop("par must be only 1 parameter")
+    if(!mer){
+        if(!(nm %in% names(coef(model))))
+            stop("par must be a named vector estimated in the model")
+        return(qnorm(mean(as.matrix(model)[,nm,drop=TRUE]>par), mean = 0, sd = 1)^2)
+    }
+    else{
+        if(!(nm %in% names(coef(model)[[1]])))
+            stop("par must be a coefficient name estimated in first group of model")
+        return(qnorm(mean(as.matrix(model)[,nm,drop=TRUE]>par), mean=0, sd = 1)^2)
+    }
+}
 
 
 

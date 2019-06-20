@@ -17,6 +17,7 @@ Imports:
     purrr,
     rstap (>= 1.1.0),
     tables,
-    Hmisc
+    Hmisc,
+    dlmBE
 Remotes: 
     Biostatistics4socialimpact/rstap

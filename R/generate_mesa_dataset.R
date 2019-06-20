@@ -30,7 +30,10 @@ generate_mesa_dataset <- function(seed = NULL,
         MESA_df <- MESA
     }
     else{
-        idno <- sample(MESA$id,size=num_subj,replace=F)
+        idno <- MESA %>% dplyr::group_by(id,visit_number) %>% dplyr::count() %>%
+            dplyr::filter(n<100) %>% dplyr::ungroup() %>%
+            dplyr::select(id) %>%
+            dplyr::pull() %>% sample(.,size=num_subj,replace=F)
         MESA_df <- MESA %>% dplyr::filter(id %in% idno)
     }
 

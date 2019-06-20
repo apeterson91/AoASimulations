@@ -27,6 +27,10 @@ create_table_one <- function(num_sims = 5,
                              beta_prior = rstap::normal(),
                              theta_prior = rstap::log_normal(location = 1 , scale = 1),
                              delta_prior = rstap::normal(),
+                             iter = 2E3,
+                             warmup = 1E3,
+                             cores = 1,
+                             chains = 1,
                              seed = NULL,
                              file = NULL){
     if(is.null(seed))
@@ -52,14 +56,18 @@ create_table_one <- function(num_sims = 5,
                         prior_stap = beta_prior,
                         prior_intercept = alpha_prior,
                         prior_theta = theta_prior,
-                        seed = seed)})
+                        chains = chains,
+                        cores = cores,
+                        iter = iter,
+                        warmup = warmup)})
 
     hpp_output <- tibble::tibble(simulation = rep(1:num_sims,2),
                          `Spatial Pattern` = factor(rep("HPP",num_sims*2)),
                          Parameter = c(rep("Beta",num_sims),rep("Theta",num_sims)),
-                         coverage = c(purrr::map_dbl(models,function(x) check_coverage(x,c("FF"=.75))),
-                                      purrr::map_dbl(models,function(x) check_coverage(x,c("FF_spatial_scale"=.5)))),
-                         `Cook & Gelman` = (rnorm(num_sims*2))^2,
+                         coverage = c(purrr::map_dbl(models,function(x) check_coverage(x,c("FF"=beta))),
+                                      purrr::map_dbl(models,function(x) check_coverage(x,c("FF_spatial_scale"=theta)))),
+                         `Cook & Gelman` =  c(purrr::map_dbl(models,function(x) calculate_CG_stat(x,c("FF"=beta))),
+                                              purrr::map_dbl(models,function(x) calculate_CG_stat(x,c("FF_spatial_scale"=theta)))),
                          interval_length = c(purrr::map_dbl(models,function(x) interval_length(x,c("FF"))),
                                              purrr::map_dbl(models,function(x) interval_length(x,c("FF_spatial_scale"))))) %>%
         dplyr::mutate(Parameter = factor(Parameter))
@@ -87,21 +95,26 @@ create_table_one <- function(num_sims = 5,
                        prior = rstap::normal(),
                        prior_stap = rstap::normal(),
                        prior_intercept = rstap::normal(location =25),
-                       prior_theta = rstap::log_normal(1,1))})
+                       prior_theta = rstap::log_normal(1,1),
+                       chains = chains,
+                       cores = cores,
+                       iter = iter,
+                       warmup = warmup)})
 
     nhpp_output <- tibble::tibble(simulation = rep(1:num_sims,2),
-                         `Spatial Pattern` = factor(rep("NHPP: Moderate",num_sims*2)),
+                         `Spatial Pattern` = factor(rep("NHPP",num_sims*2)),
                          Parameter = c(rep("Beta",num_sims),rep("Theta",num_sims)),
-                         coverage =c(purrr::map_dbl(nhpp_models,function(x) check_coverage(x,c("FF"=.75))),
-                                     purrr::map_dbl(nhpp_models,function(x) check_coverage(x,c("FF_spatial_scale"=.5)))),
-                         `Cook & Gelman` = rnorm(num_sims*2)^2,
+                         coverage =c(purrr::map_dbl(nhpp_models,function(x) check_coverage(x,c("FF"=beta))),
+                                     purrr::map_dbl(nhpp_models,function(x) check_coverage(x,c("FF_spatial_scale"=theta)))),
+                         `Cook & Gelman` =  c(purrr::map_dbl(nhpp_models,function(x) calculate_CG_stat(x,c("FF"=beta))),
+                                              purrr::map_dbl(nhpp_models,function(x) calculate_CG_stat(x,c("FF_spatial_scale"=theta) ))),
                          interval_length = c(purrr::map_dbl(nhpp_models,function(x) interval_length(x,c("FF"))),
                                              purrr::map_dbl(nhpp_models,function(x) interval_length(x,c("FF_spatial_scale"))))) %>%
         dplyr::mutate(Parameter = factor(Parameter))
 
 
     nhpp_output2 <- tibble::tibble(simulation = rep(1:num_sims,1),
-                           `Spatial Pattern` = factor(rep("NHPP: Moderate",num_sims)),
+                           `Spatial Pattern` = factor(rep("NHPP",num_sims)),
                            RMSE = purrr::map_dbl(nhpp_models,calculate_RMSE_median))
 
     ## Matern
@@ -123,34 +136,39 @@ create_table_one <- function(num_sims = 5,
                         prior = rstap::normal(),
                         prior_stap = rstap::normal(),
                         prior_intercept = rstap::normal(location =25),
-                        prior_theta = rstap::log_normal(1,1))})
+                        prior_theta = rstap::log_normal(1,1),
+                        chains = chains,
+                        cores = cores,
+                        iter = iter,
+                        warmup = warmup)})
 
     matern_output <- tibble::tibble(simulation = rep(1:num_sims,2),
-                          `Spatial Pattern` = factor(rep("Matern Process",num_sims*2)),
+                          `Spatial Pattern` = factor(rep("Matern",num_sims*2)),
                           Parameter = c(rep("Beta",num_sims),rep("Theta",num_sims)),
-                          coverage =c(purrr::map_dbl(matern_models,function(x) check_coverage(x,c("FF"=.75))),
-                                      purrr::map_dbl(matern_models,function(x) check_coverage(x,c("FF_spatial_scale"=.5)))),
-                          `Cook & Gelman` = rnorm(num_sims*2)^2,
+                          coverage =c(purrr::map_dbl(matern_models,function(x) check_coverage(x,c("FF"=beta))),
+                                      purrr::map_dbl(matern_models,function(x) check_coverage(x,c("FF_spatial_scale"= theta)))),
+                          `Cook & Gelman` =  c(purrr::map_dbl(matern_models,function(x) calculate_CG_stat(x,c("FF"=beta) )),
+                                               purrr::map_dbl(matern_models,function(x) calculate_CG_stat(x,c("FF_spatial_scale"=theta)))),
                           interval_length = c(purrr::map_dbl(matern_models,function(x) interval_length(x,c("FF"))),
                                               purrr::map_dbl(matern_models,function(x) interval_length(x,c("FF_spatial_scale"))))) %>%
         dplyr::mutate(Parameter = factor(Parameter))
 
 
     matern_output2 <- tibble::tibble(simulation = 1:num_sims,
-                           `Spatial Pattern` = factor(rep("Matern Process",num_sims)),
+                           `Spatial Pattern` = factor(rep("Matern",num_sims)),
                            RMSE = purrr::map_dbl(matern_models,calculate_RMSE_median))
 
     ## MESA
 
     MESA_datasets <- purrr::map(1:num_sims,function(x) generate_mesa_dataset(seed = x,
-                                                                             num_subj = num_MESA_subj ,
+                                                                             num_subj = num_MESA_subj,
                                                                              alpha = alpha,
                                                                              beta = beta,
                                                                              delta = delta,
                                                                              beta_bar = beta_bar,
                                                                              theta = theta,
                                                                              sigma = sigma,
-                                                                             W= function(x) exp(-x)))
+                                                                             W = function(x) exp(-x)))
 
     MESA_models <- purrr::map(MESA_datasets,function(x){
         rstap::stapdnd_glmer(outcome~sex + sap_dnd_bar(FF,exp) + (visit_number|id),
@@ -162,15 +180,20 @@ create_table_one <- function(num_sims = 5,
                         prior = rstap::normal(),
                         prior_stap = rstap::normal(),
                         prior_intercept = rstap::normal(location = 25),
-                        prior_theta = rstap::log_normal(1,1))})
+                        prior_theta = rstap::log_normal(1,1),
+                        chains = chains,
+                        cores = cores,
+                        iter = iter,
+                        warmup = warmup)})
 
 
     MESA_output <- tibble::tibble(simulation = rep(1:num_sims,2),
                             `Spatial Pattern` = factor(rep("MESA data",num_sims*2)),
                             Parameter = c(rep("Beta",num_sims),rep("Theta",num_sims)),
-                            coverage =c(purrr::map_dbl(MESA_models,function(x) check_coverage(x,c("FF_dnd"=.75))),
-                                        purrr::map_dbl(MESA_models,function(x) check_coverage(x,c("FF_spatial_scale"=.5)))),
-                            `Cook & Gelman` = rnorm(num_sims*2)^2,
+                            coverage =c(purrr::map_dbl(MESA_models,function(x) check_coverage(x,c("FF_dnd"=beta))),
+                                        purrr::map_dbl(MESA_models,function(x) check_coverage(x,c("FF_spatial_scale"=theta)))),
+                            `Cook & Gelman` =  c(purrr::map_dbl(MESA_models,function(x) calculate_CG_stat(x,c("FF_dnd"=beta),TRUE)),
+                                                 purrr::map_dbl(MESA_models,function(x) calculate_CG_stat(x,c("FF_spatial_scale"=theta),TRUE))),
                             interval_length = c(purrr::map_dbl(MESA_models,function(x) interval_length(x,c("FF_dnd"))),
                                                 purrr::map_dbl(MESA_models,function(x) interval_length(x,c("FF_spatial_scale"))))) %>%
         dplyr::mutate(Parameter = factor(Parameter))
@@ -225,6 +248,10 @@ create_table_two <- function(num_sims = 5,
                              delta = -2.2,
                              beta = .75,
                              cores = 2){
+
+    # DLM
+
+    ddatasets <- purrr::map(1:num_sims,function(x) generate_dlm_dataset(seed = x,))
 
     # Exponential
     edatasets <- purrr::map(1:num_sims,function(x) generate_hpp_dataset(seed = x,

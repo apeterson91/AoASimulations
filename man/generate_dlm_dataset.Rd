@@ -4,16 +4,18 @@
 \alias{generate_dlm_dataset}
 \title{generates Distributed Lag Model or polynomial function effect}
 \usage{
-generate_dlm_dataset(seed, num_subj = 100L, Lambda_xy = function(x, y)
-  {     20 - x^2 + y^2 }, max_dist = 5L, bef_xlim = c(0, 1),
-  bef_ylim = c(0, 1), subj_xlim = c(0, 1), subj_ylim = c(0, 1),
-  alpha = 25, delta = -2.3, beta = 0.1, theta = 0.5, sigma = 1,
-  W = function(x) exp(-x))
+generate_dlm_dataset(seed, num_subj = 100L, num_dists = 50L,
+  max_dist = 10L, bef_xlim = c(0L, 1L), bef_ylim = c(0L, 1L),
+  subj_xlim = c(0L, 1L), subj_ylim = c(0L, 1L), alpha = 25L,
+  delta = -2.3, beta = 0.1, kern = 20, theta = 40,
+  residual_error = 1)
 }
 \arguments{
 \item{seed}{an integer for set.seed()}
 
 \item{num_subj}{number of subjects to simulate}
+
+\item{num_dists}{number of distances/subject to simulate}
 
 \item{max_dist}{upper bound on distances to include}
 
@@ -33,11 +35,9 @@ generate_dlm_dataset(seed, num_subj = 100L, Lambda_xy = function(x, y)
 
 \item{theta}{true spatial scale}
 
-\item{W}{weight function}
-
-\item{num_dists}{number of distances/subject to simulate}
-
 \item{inten}{intensity function for nhpp as a function of spatial coords (x,y)}
+
+\item{W}{weight function}
 }
 \description{
 generates Distributed Lag Model or polynomial function effect
