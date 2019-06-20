@@ -11,6 +11,11 @@
 #' @param beta_prior prior to be placed on SAP effect
 #' @param theta_prior prior to be placed on spatial scale
 #' @param delta_prior prior to be placed on simulated binary covariate effect
+#' @param iter number of iterations for which to run the stap_glm or stapdnd_glmer sampler
+#' @param warmup number of iterations to warmup the sampler
+#' @param chains number of independent MCMC chains to draw
+#' @param cores number of cores with which to run chains in parallel
+#' @param file path to file to save tables to in .tex format
 #' @return list of two table components table1_top -
 #' which includes the coverage and diagnostic statistics broken down by parameter and
 #' table1_bottom which has the RMSE for the entire model
@@ -29,9 +34,8 @@ create_table_one <- function(num_sims = 5,
                              delta_prior = rstap::normal(),
                              iter = 2E3,
                              warmup = 1E3,
-                             cores = 1,
                              chains = 1,
-                             seed = NULL,
+                             cores = 1,
                              file = NULL){
     if(is.null(seed))
         set.seed(24321)
