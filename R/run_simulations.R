@@ -37,8 +37,6 @@ create_table_one <- function(num_sims = 5,
                              chains = 1,
                              cores = 1,
                              file = NULL){
-    if(is.null(seed))
-        set.seed(24321)
 
     ## HPP
     datasets <- purrr::map(1:num_sims,function(x) generate_hpp_dataset(seed = x,
