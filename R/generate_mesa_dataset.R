@@ -8,13 +8,15 @@
 #' @param beta true bef effect
 #' @param theta true spatial scale
 #' @param W weight function
+#'
+#' @export
 generate_mesa_dataset <- function(seed = NULL,
-                                  num_subj = NULL,
+                                  num_subj = 100,
                                   max_dist = 10,
                                   alpha = 23,
                                   delta = -2.2,
-                                  beta = .65,
-                                  beta_bar = .85,
+                                  beta = .1,
+                                  beta_bar = .5,
                                   theta = .7,
                                   sigma = 1,
                                   W = function(x) exp(-x)){

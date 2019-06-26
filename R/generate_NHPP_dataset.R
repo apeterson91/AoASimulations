@@ -14,9 +14,11 @@
 #' @param beta true bef effect
 #' @param theta true spatial scale
 #' @param W weight function
+#'
+#' @export
 generate_nhpp_dataset <- function(seed = NULL,
-                                 num_subj_sim = 1,
-                                 num_bef_sim = 1,
+                                 num_subj = 100L,
+                                 num_dists = 30L,
                                  Lambda_xy = function(x,y){ 20 - x^2 -y^2 },
                                  max_dist = 5L,
                                  bef_xlim = c(-1,1),
@@ -32,8 +34,6 @@ generate_nhpp_dataset <- function(seed = NULL,
 
     if(!is.null(seed))
         set.seed(seed)
-    if(num_subj_sim < 1 )
-        stop("num_subj_sim and ")
     if(!(length(subj_xlim)==2)&&length(subj_ylim)==2)
         stop("xlim and ylim should both be vectors of length 2")
     if(!(length(bef_xlim)==2)&&length(bef_ylim)==2)
@@ -47,29 +47,23 @@ generate_nhpp_dataset <- function(seed = NULL,
 
     bef_points <- spatstat::rpoispp(lambda =Lambda_xy,
                                     win = bef_window,
-                                    nsim = num_bef_sim)
+                                    nsim = 100)
 
     subj_points <- spatstat::rpoispp(lambda = Lambda_xy,
                                      win = subj_window,
-                                     nsim = num_subj_sim)
+                                     nsim = 100)
 
-    if(num_bef_sim==1)
-        bef_posdata <- tibble::tibble(x= bef_points$x,
-                                      y = bef_points$y)
-    else
-        bef_posdata <-  tibble::tibble(x= unlist(purrr::map(bef_points,function(z) z[["x"]])),
-                            y = unlist(purrr::map(bef_points,function(z) z[["y"]])))
 
-    if(num_subj_sim==1){
-        subj_data <- tibble::tibble(x_coord = subj_points$x,
-                                    y_coord = subj_points$y) %>%
-        dplyr::mutate(subj_id = 1:dplyr::n())
-    }
-    else{
-        subj_data <- tibble::tibble(x_coord = unlist(purrr::map(subj_points,function(z) z[["x"]])),
+    bef_posdata <-  tibble::tibble(x= unlist(purrr::map(bef_points,function(z) z[["x"]])),
+                            y = unlist(purrr::map(bef_points,function(z) z[["y"]]))) %>%
+        dplyr::sample_n(num_dists)
+
+
+    subj_data <- tibble::tibble(x_coord = unlist(purrr::map(subj_points,function(z) z[["x"]])),
                                     y_coord = unlist(purrr::map(subj_points,function(z) z[["y"]]))) %>%
+        dplyr::sample_n(num_subj) %>%
         dplyr::mutate(subj_id = 1:dplyr::n())
-    }
+
 
     distances <- fields::rdist(as.matrix(subj_data)[,c("x_coord","y_coord")],
                                as.matrix(bef_posdata[,c("x","y")]))

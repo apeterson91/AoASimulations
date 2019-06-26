@@ -6,8 +6,8 @@
 \usage{
 create_table_one(num_sims = 5, n = 300, num_MESA_subj = 100,
   d = 20, alpha = 25, theta = 0.5, delta = -2.2, beta = 0.75,
-  beta_bar = 0.85, sigma = 1, alpha_prior = rstap::normal(location =
-  25, autoscale = F), beta_prior = rstap::normal(),
+  beta_bar = 0.85, alpha_prior = rstap::normal(location = 25, autoscale
+  = F), beta_prior = rstap::normal(),
   theta_prior = rstap::log_normal(location = 1, scale = 1),
   delta_prior = rstap::normal(), iter = 2000, warmup = 1000,
   chains = 1, cores = 1, file = NULL)

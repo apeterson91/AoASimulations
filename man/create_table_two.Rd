@@ -4,9 +4,9 @@
 \alias{create_table_two}
 \title{create_table_two}
 \usage{
-create_table_two(num_sims = 5, num_subj = 300, num_dists = 20,
+create_table_two(num_sims = 5, num_subj = 100, num_dists = 30,
   alpha = 25, theta = 0.5, shape = 5, delta = -2.2, beta = 0.75,
-  cores = 2)
+  iter = 2000, warmup = 1000, chains = 1, cores = 1, file = NULL)
 }
 \arguments{
 \item{num_sims}{}

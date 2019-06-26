@@ -21,9 +21,9 @@
 #' table1_bottom which has the RMSE for the entire model
 #' @export
 create_table_one <- function(num_sims = 5,
-                             n = 300,
+                             n = 100L,
                              num_MESA_subj = 100,
-                             d = 20,
+                             d = 30,
                              alpha = 25,
                              theta = .5, delta = -2.2,
                              beta = .75, beta_bar = .85,
@@ -80,8 +80,8 @@ create_table_one <- function(num_sims = 5,
     ## NHPP
 
     nhpp_datasets <- purrr::map(1:num_sims,function(x) generate_nhpp_dataset(seed = x,
-                                                                             num_subj_sim = 1,
-                                                                             num_bef_sim = 1,
+                                                                             num_subj = n,
+                                                                             num_dists = d,
                                                                              alpha = alpha,
                                                                              theta = theta,
                                                                              delta = delta,
@@ -121,12 +121,12 @@ create_table_one <- function(num_sims = 5,
     ## Matern
 
     matern_datasets <- purrr::map(1:num_sims,function(x) generate_matern_dataset(seed = x,
-                                                                               num_subj_sim = 1,
-                                                                               num_bef_sim = 1,
-                                                                               alpha = alpha,
-                                                                               theta = theta,
-                                                                               delta = delta,
-                                                                               beta = beta))
+                                                                                 num_subj = n,
+                                                                                 num_dists = d,
+                                                                                 alpha = alpha,
+                                                                                 theta = theta,
+                                                                                 delta = delta,
+                                                                                 beta = beta))
 
     matern_models <- purrr::map(matern_datasets,function(x){
         rstap::stap_glm(outcome~sex + sap(FF,exp),
@@ -162,13 +162,10 @@ create_table_one <- function(num_sims = 5,
     ## MESA
 
     MESA_datasets <- purrr::map(1:num_sims,function(x) generate_mesa_dataset(seed = x,
-                                                                             num_subj = num_MESA_subj,
+                                                                             num_subj = n,
                                                                              alpha = alpha,
-                                                                             beta = beta,
-                                                                             delta = delta,
-                                                                             beta_bar = beta_bar,
                                                                              theta = theta,
-                                                                             sigma = sigma,
+                                                                             delta = delta,
                                                                              W = function(x) exp(-x)))
 
     MESA_models <- purrr::map(MESA_datasets,function(x){
@@ -280,7 +277,7 @@ create_table_two <- function(num_sims = 5,
                                                                          alpha = alpha,
                                                                          beta = beta,
                                                                          delta = delta,
-                                                                         W = function(x) (x<=1.2)*1))
+                                                                         W = function(x) (x<=0.75)*1))
 
     # DLM - 2
 
@@ -311,15 +308,15 @@ create_table_two <- function(num_sims = 5,
                     lag = lag[-length(lag)])
     })
 
-    # cps <- numeric(num_sims) # changepoints
-    # for(i in 1:num_sims){
-    #     assign("sex", dlm_lists[[i]]$sex, envir = globalenv())
-    #     assign("outcome",dlm_lists[[i]]$outcome,envir = globalenv())
-    #     assign("Conc", dlm_lists[[i]]$Conc, envir = globalenv())
-    #     assign("lag",dlm_lists[[i]]$lag, envir = globalenv())
-    #     fit <- dlmBE::dlm(outcome ~ sex + age + dlmBE::cr(lag,Conc))
-    #     cps[i] <- dlmBE::changePoint(fit)
-    # }
+    cps <- numeric(num_sims) # changepoints
+    for(i in 1:num_sims){
+        assign("sex", dlm_lists[[i]]$sex, envir = globalenv())
+        assign("outcome",dlm_lists[[i]]$outcome,envir = globalenv())
+        assign("Conc", dlm_lists[[i]]$Conc, envir = globalenv())
+        assign("lag",dlm_lists[[i]]$lag, envir = globalenv())
+        fit <- dlmBE::dlm(outcome ~ sex + dlmBE::cr(lag,Conc))
+        cps[i] <- dlmBE::changePoint(fit)
+    }
 
     # Model fitting
 
@@ -466,25 +463,25 @@ create_table_two <- function(num_sims = 5,
                                 Simulated_Function = rep("Step Function",num_sims),
                                 Modeled_Function = rep("Exponential", num_sims),
                                 True_termination = 1.2,
-                                Stap_termination = purrr::map_dbl(de,function(x) rstap::stap_termination(x,max_value=1000)[2]))
+                                Stap_termination = purrr::map_dbl(de,function(x) rstap::stap_termination(x,max_value=100000)[2]))
 
     term_dw <- tibble::tibble(sim_id = 1:num_sims,
                                 Simulated_Function = rep("Step Function",num_sims),
                                 Modeled_Function = rep("Weibull", num_sims),
                                 True_termination = 1.2,
-                                Stap_termination = purrr::map_dbl(dw,function(x) rstap::stap_termination(x,max_value=1000)[2]))
+                                Stap_termination = purrr::map_dbl(dw,function(x) rstap::stap_termination(x,max_value=100000)[2]))
 
     term_d2exp <- tibble::tibble(sim_id = 1:num_sims,
                               Simulated_Function = rep("Quadratic Step",num_sims),
                               Modeled_Function = rep("Exponential", num_sims),
                               True_termination = .75,
-                              Stap_termination = purrr::map_dbl(d2e,function(x) rstap::stap_termination(x,max_value=1000)[2]))
+                              Stap_termination = purrr::map_dbl(d2e,function(x) rstap::stap_termination(x,max_value=100000)[2]))
 
     term_d2wei <- tibble::tibble(sim_id = 1:num_sims,
                                  Simulated_Function = rep("Quadratic Step",num_sims),
                                  Modeled_Function = rep("Weibull", num_sims),
                                  True_termination = .75,
-                                 Stap_termination = purrr::map_dbl(d2w,function(x) rstap::stap_termination(x,max_value=1000)[2]))
+                                 Stap_termination = purrr::map_dbl(d2w,function(x) rstap::stap_termination(x,max_value=100000)[2]))
 
     term_exp  <- tibble::tibble(sim_id = 1:num_sims,
                                 Simulated_Function = rep("Exponential",num_sims),

@@ -5,8 +5,8 @@
 \title{generates homogenous poisson process data}
 \usage{
 generate_hpp_dataset(seed, num_subj = 100L, num_dists = 30L,
-  max_dist = 5L, bef_xlim = c(0, 1), bef_ylim = c(0, 1),
-  subj_xlim = c(0, 1), subj_ylim = c(0, 1), alpha = 25,
+  max_dist = 5L, bef_xlim = c(-1, 1), bef_ylim = c(-1, 1),
+  subj_xlim = c(-1, 1), subj_ylim = c(-1, 1), alpha = 25,
   delta = -2.3, beta = 0.1, theta = 0.5, shape = NULL, sigma = 1,
   W = function(x, y) exp(-x))
 }

@@ -8,12 +8,18 @@
 #' @param beta true bef effect
 #' @param theta true spatial scale
 #' @param W weight function
+#'
+#' @export
 generate_dlm_dataset <- function(seed = NULL,
                                  num_subj = 100,
-                                 num_dists = 20,
+                                 num_dists = 30,
+                                 bef_xlim = c(-1,1),
+                                 bef_ylim=c(-1,1),
+                                 subj_xlim = c(-1,1),
+                                 subj_ylim = c(-1,1),
                                  alpha = 25,
-                                 delta = -2.2,
-                                 beta = .5,
+                                 delta = -2.3,
+                                 beta = .1,
                                  sigma = 1,
                                  W = function(x) (x<=1.2)*1){
     if(!is.null(seed))
@@ -21,10 +27,18 @@ generate_dlm_dataset <- function(seed = NULL,
     else
         set.seed(3141)
 
-    bef_locations <- tibble::tibble(x = runif(num_dists,min = -1),
-                                    y = runif(num_dists,min = -1))
-    subj_locations <- tibble::tibble(x = runif(num_subj,min = -1),
-                                     y = runif(num_subj,min = -1))
+    bef_locations <- tibble::tibble(x = runif(num_dists,
+                                              min = bef_xlim[1],
+                                              max = bef_xlim[2]),
+                                    y = runif(num_dists,
+                                              min = bef_ylim[1],
+                                              max = bef_ylim[2]))
+    subj_locations <- tibble::tibble(x = runif(num_subj,
+                                               min = subj_xlim[1],
+                                               max = subj_xlim[2]),
+                                     y = runif(num_subj,
+                                               min = subj_ylim[1],
+                                               max = subj_ylim[2]))
 
     subj.xy <- as.matrix(subj_locations)
     feat.xy <- as.matrix(bef_locations)

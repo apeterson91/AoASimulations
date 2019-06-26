@@ -4,11 +4,10 @@
 \alias{generate_dlm_dataset}
 \title{generates Distributed Lag Model or polynomial function effect}
 \usage{
-generate_dlm_dataset(seed, num_subj = 100L, num_dists = 50L,
-  max_dist = 10L, bef_xlim = c(0L, 1L), bef_ylim = c(0L, 1L),
-  subj_xlim = c(0L, 1L), subj_ylim = c(0L, 1L), alpha = 25L,
-  delta = -2.3, beta = 0.1, kern = 20, theta = 40,
-  residual_error = 1)
+generate_dlm_dataset(seed = NULL, num_subj = 100, num_dists = 30,
+  bef_xlim = c(-1, 1), bef_ylim = c(-1, 1), subj_xlim = c(-1, 1),
+  subj_ylim = c(-1, 1), alpha = 25, delta = -2.3, beta = 0.1,
+  sigma = 1, W = function(x) (x <= 1.2) * 1)
 }
 \arguments{
 \item{seed}{an integer for set.seed()}
@@ -17,27 +16,15 @@ generate_dlm_dataset(seed, num_subj = 100L, num_dists = 50L,
 
 \item{num_dists}{number of distances/subject to simulate}
 
-\item{max_dist}{upper bound on distances to include}
-
-\item{bef_xlim}{x coordinate bounds from which to simulate befs}
-
-\item{bef_ylim}{y coordinate bounds from which to simulate bef positions}
-
-\item{subj_xlim}{x coordinate bounds from which to simulate subject positions}
-
-\item{subj_ylim}{y coordinate bounds from which to simulate subject positions}
-
 \item{alpha}{true intercept value}
 
 \item{delta}{confounder effect}
 
 \item{beta}{true bef effect}
 
-\item{theta}{true spatial scale}
-
-\item{inten}{intensity function for nhpp as a function of spatial coords (x,y)}
-
 \item{W}{weight function}
+
+\item{theta}{true spatial scale}
 }
 \description{
 generates Distributed Lag Model or polynomial function effect

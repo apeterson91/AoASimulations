@@ -4,8 +4,8 @@
 \alias{generate_matern_dataset}
 \title{generates matern cluster process data}
 \usage{
-generate_matern_dataset(seed = NULL, num_subj_sim = 1,
-  num_bef_sim = 1, Lambda_xy = function(x, y) {     20 - x^2 - y^2 },
+generate_matern_dataset(seed = NULL, num_subj = 100L,
+  num_dists = 30L, Lambda_xy = function(x, y) {     20 - x^2 - y^2 },
   scale = 1, mu = 1, max_dist = 5L, bef_xlim = c(-1, 1),
   bef_ylim = c(-1, 1), subj_xlim = c(-1, 1), subj_ylim = c(-1, 1),
   alpha = 25, delta = -2.3, beta = 0.1, theta = 0.5, sigma = 1,
@@ -13,6 +13,10 @@ generate_matern_dataset(seed = NULL, num_subj_sim = 1,
 }
 \arguments{
 \item{seed}{an integer for set.seed()}
+
+\item{num_subj}{number of subjects to simulate}
+
+\item{num_dists}{number of distances/subject to simulate}
 
 \item{scale}{matern process kappa parameter - passed to rMatClust}
 
@@ -37,10 +41,6 @@ generate_matern_dataset(seed = NULL, num_subj_sim = 1,
 \item{theta}{true spatial scale}
 
 \item{W}{weight function}
-
-\item{num_subj}{number of subjects to simulate}
-
-\item{num_dists}{number of distances/subject to simulate}
 
 \item{inten}{intensity function for nhpp as a function of spatial coords (x,y) - passed to rMatClust}
 }
