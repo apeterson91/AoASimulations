@@ -4,8 +4,8 @@
 \alias{generate_mesa_dataset}
 \title{generates stap dataset using MESA HFS-cohort distances}
 \usage{
-generate_mesa_dataset(seed = NULL, num_subj = NULL, max_dist = 10,
-  alpha = 23, delta = -2.2, beta = 0.65, beta_bar = 0.85,
+generate_mesa_dataset(seed = NULL, num_subj = 100, max_dist = 10,
+  alpha = 23, delta = -2.2, beta = 0.1, beta_bar = 0.5,
   theta = 0.7, sigma = 1, W = function(x) exp(-x))
 }
 \arguments{
