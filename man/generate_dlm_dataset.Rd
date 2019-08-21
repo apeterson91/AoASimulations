@@ -7,7 +7,7 @@
 generate_dlm_dataset(seed = NULL, num_subj = 100, num_dists = 30,
   bef_xlim = c(-1, 1), bef_ylim = c(-1, 1), subj_xlim = c(-1, 1),
   subj_ylim = c(-1, 1), alpha = 25, delta = -2.3, beta = 0.1,
-  sigma = 1, W = function(x) (x <= 1.2) * 1)
+  sigma = 1, K = function(x) {     (x <= 1.2) * 1 })
 }
 \arguments{
 \item{seed}{an integer for set.seed()}
@@ -22,9 +22,9 @@ generate_dlm_dataset(seed = NULL, num_subj = 100, num_dists = 30,
 
 \item{beta}{true bef effect}
 
-\item{W}{weight function}
-
 \item{theta}{true spatial scale}
+
+\item{W}{weight function}
 }
 \description{
 generates Distributed Lag Model or polynomial function effect

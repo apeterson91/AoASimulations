@@ -9,7 +9,7 @@ generate_matern_dataset(seed = NULL, num_subj = 100L,
   scale = 1, mu = 1, max_dist = 5L, bef_xlim = c(-1, 1),
   bef_ylim = c(-1, 1), subj_xlim = c(-1, 1), subj_ylim = c(-1, 1),
   alpha = 25, delta = -2.3, beta = 0.1, theta = 0.5, sigma = 1,
-  W = function(x) exp(-x))
+  K = function(x) exp(-x))
 }
 \arguments{
 \item{seed}{an integer for set.seed()}
@@ -40,7 +40,7 @@ generate_matern_dataset(seed = NULL, num_subj = 100L,
 
 \item{theta}{true spatial scale}
 
-\item{W}{weight function}
+\item{K}{exposure function}
 
 \item{inten}{intensity function for nhpp as a function of spatial coords (x,y) - passed to rMatClust}
 }

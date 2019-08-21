@@ -6,7 +6,7 @@
 \usage{
 generate_mesa_dataset(seed = NULL, num_subj = 100, max_dist = 10,
   alpha = 23, delta = -2.2, beta = 0.1, beta_bar = 0.5,
-  theta = 0.7, sigma = 1, W = function(x) exp(-x))
+  theta = 0.7, sigma = 1, K = function(x) exp(-x))
 }
 \arguments{
 \item{seed}{an integer for set.seed()}
@@ -23,7 +23,7 @@ generate_mesa_dataset(seed = NULL, num_subj = 100, max_dist = 10,
 
 \item{theta}{true spatial scale}
 
-\item{W}{weight function}
+\item{K}{exposure function}
 }
 \description{
 generates stap dataset using MESA HFS-cohort distances

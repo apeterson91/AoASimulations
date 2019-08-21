@@ -8,9 +8,10 @@ create_table_one(num_sims = 5, num_subj = 100L, num_mesa_subj = 50L,
   num_dists = 30, alpha = 23, theta = 0.5, delta = -2.2,
   beta = 0.75, beta_bar = 0.85, alpha_prior = rstap::normal(location
   = 25, scale = 4, autoscale = F), beta_prior = rstap::normal(location =
-  0, scale = 3), theta_prior = rstap::log_normal(location = 1, scale =
-  1), delta_prior = rstap::normal(location = 0, scale = 3),
-  iter = 2000, warmup = 1000, chains = 1, cores = 1, file = NULL)
+  0, scale = 3, autoscale = F), theta_prior = rstap::log_normal(location
+  = 0, scale = 1, autoscale = F), delta_prior = rstap::normal(location =
+  0, scale = 3, autoscale = F), iter = 4000, warmup = 2000,
+  chains = 1, cores = 1, file = NULL)
 }
 \arguments{
 \item{num_sims}{number of simulations to run}
@@ -48,9 +49,10 @@ create_table_one(num_sims = 5, num_subj = 100L, num_mesa_subj = 50L,
 \item{file}{path to file to save tables to in .tex format}
 }
 \value{
-list of two table components table1_top -
+list of four table components table1_top -
 which includes the coverage and diagnostic statistics broken down by parameter and
-table1_bottom which has the RMSE for the entire model
+table1_bottom which has the RMSE for the entire model.
+The two remaining "raw" table components contain the pre-aggregation data-frames
 }
 \description{
 create_table_one in AoAS paper

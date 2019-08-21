@@ -8,7 +8,7 @@ generate_hpp_dataset(seed, num_subj = 100L, num_dists = 30L,
   max_dist = 5L, bef_xlim = c(-1, 1), bef_ylim = c(-1, 1),
   subj_xlim = c(-1, 1), subj_ylim = c(-1, 1), alpha = 25,
   delta = -2.3, beta = 0.1, theta = 0.5, shape = NULL, sigma = 1,
-  W = function(x, y) exp(-x))
+  K = function(x) exp(-x))
 }
 \arguments{
 \item{seed}{an integer for set.seed()}
@@ -35,7 +35,7 @@ generate_hpp_dataset(seed, num_subj = 100L, num_dists = 30L,
 
 \item{theta}{true spatial scale}
 
-\item{W}{weight function}
+\item{K}{exposure function}
 }
 \description{
 generates homogenous poisson process data

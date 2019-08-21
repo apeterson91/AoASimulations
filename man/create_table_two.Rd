@@ -7,10 +7,11 @@
 create_table_two(num_sims = 5, num_subj = 100, num_dists = 30,
   alpha = 23, theta = 0.5, shape = 5, delta = -2.2, beta = 0.75,
   alpha_prior = rstap::normal(location = 25, scale = 4, autoscale = F),
-  beta_prior = rstap::normal(location = 0, scale = 3),
-  theta_prior = rstap::log_normal(location = 1, scale = 1),
-  delta_prior = rstap::normal(location = 0, scale = 3), iter = 2000,
-  warmup = 1000, chains = 1, cores = 1, file = NULL)
+  beta_prior = rstap::normal(location = 0, scale = 3, autoscale = F),
+  theta_prior = rstap::log_normal(location = 0, scale = 1, autoscale =
+  F), delta_prior = rstap::normal(location = 0, scale = 3, autoscale =
+  F), iter = 4000, warmup = 2000, chains = 1, cores = 1,
+  file = NULL)
 }
 \arguments{
 \item{num_sims}{number of simulations to run}
