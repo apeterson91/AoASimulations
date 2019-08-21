@@ -1,13 +1,14 @@
 #' create_table_one in AoAS paper
 #'
 #' @param num_sims number of simulations to run
-#' @param n number of subjects to simulate
-#' @param d number of distances to simulate
+#' @param num_subj number of subjects to simulate
+#' @param num_mesa_subj number of subjects to sample from MESA data for MESA analysis
+#' @param num_dists number of distances to simulate
 #' @param alpha intercept for generating outcome
 #' @param theta true spatial scale under which datasets
 #' @param delta simulated binary covariate regression effect
 #' @param beta SAP effect
-#' @param alpha_prior prior to be placed on intercept in model
+#' @param alpha_prior prior to be placed on intercept in model, must be an rstap:: namespace object
 #' @param beta_prior prior to be placed on SAP effect
 #' @param theta_prior prior to be placed on spatial scale
 #' @param delta_prior prior to be placed on simulated binary covariate effect
@@ -16,9 +17,10 @@
 #' @param chains number of independent MCMC chains to draw
 #' @param cores number of cores with which to run chains in parallel
 #' @param file path to file to save tables to in .tex format
-#' @return list of two table components table1_top -
+#' @return list of four table components table1_top -
 #' which includes the coverage and diagnostic statistics broken down by parameter and
-#' table1_bottom which has the RMSE for the entire model
+#' table1_bottom which has the RMSE for the entire model.
+#' The two remaining "raw" table components contain the pre-aggregation data-frames
 #' @export
 create_table_one <- function(num_sims = 5,
                              num_subj = 100L,
@@ -27,12 +29,12 @@ create_table_one <- function(num_sims = 5,
                              alpha = 23,
                              theta = .5, delta = -2.2,
                              beta = .75, beta_bar = .85,
-                             alpha_prior = rstap::normal(location = 25,autoscale =F),
-                             beta_prior = rstap::normal(),
-                             theta_prior = rstap::log_normal(location = 1 , scale = 1),
-                             delta_prior = rstap::normal(),
-                             iter = 2E3,
-                             warmup = 1E3,
+                             alpha_prior = rstap::normal(location = 25, scale = 4, autoscale =F),
+                             beta_prior = rstap::normal(location = 0, scale = 3, autoscale = F),
+                             theta_prior = rstap::log_normal(location = 0 , scale = 1, autoscale = F),
+                             delta_prior = rstap::normal(location = 0, scale = 3, autoscale = F),
+                             iter = 4E3,
+                             warmup = 2E3,
                              chains = 1,
                              cores = 1,
                              file = NULL){
@@ -93,10 +95,10 @@ create_table_one <- function(num_sims = 5,
                         distance_data = x$bef_data,
                         max_distance = 10,
                         subject_ID = "subj_id",
-                        prior = rstap::normal(),
-                        prior_stap = rstap::normal(),
-                        prior_intercept = rstap::normal(location =25),
-                        prior_theta = rstap::log_normal(1,1),
+                        prior = delta_prior,
+                        prior_stap = beta_prior,
+                        prior_intercept = alpha_prior,
+                        prior_theta = theta_prior,
                         chains = chains,
                         cores = cores,
                         iter = iter,
@@ -134,10 +136,10 @@ create_table_one <- function(num_sims = 5,
                         distance_data = x$bef_data,
                         max_distance = 10,
                         subject_ID = "subj_id",
-                        prior = rstap::normal(),
-                        prior_stap = rstap::normal(),
-                        prior_intercept = rstap::normal(location =25),
-                        prior_theta = rstap::log_normal(1,1),
+                        prior = delta_prior,
+                        prior_stap = beta_prior,
+                        prior_intercept = alpha_prior,
+                        prior_theta = theta_prior,
                         chains = chains,
                         cores = cores,
                         iter = iter,
@@ -166,9 +168,13 @@ create_table_one <- function(num_sims = 5,
                                                                              alpha = alpha,
                                                                              theta = theta,
                                                                              delta = delta,
-                                                                             W = function(x) exp(-x)))
+                                                                             beta = beta,
+                                                                             beta_bar = beta_bar,
+                                                                             K = function(x) exp(-x)))
 
+    i <- 1
     MESA_models <- purrr::map(MESA_datasets,function(x){
+        cat(paste0("MESA Model: ",i))
         rstap::stapdnd_glmer(outcome~sex + sap_dnd_bar(FF,exp) + (visit_number|id),
                              subject_data = x$subject_data,
                              distance_data = x$bef_data,
@@ -182,7 +188,9 @@ create_table_one <- function(num_sims = 5,
                              chains = chains,
                              cores = cores,
                              iter = iter,
-                             warmup = warmup)})
+                             warmup = warmup)
+        i <- i + 1
+        })
 
 
     MESA_output <- tibble::tibble(simulation = rep(1:num_sims,2),
@@ -229,5 +237,9 @@ create_table_one <- function(num_sims = 5,
     print(tab1a)
     print(tab1b)
 
-    return(list(top_table1 = tab1a,bottom_table1 = tab1b))
+    return(list(top_table1 = tab1a,
+                bottom_table1 = tab1b,
+                top_raw_output = output,
+                bottom_raw_output = output2
+                ))
 }

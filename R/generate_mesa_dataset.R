@@ -7,7 +7,7 @@
 #' @param delta confounder effect
 #' @param beta true bef effect
 #' @param theta true spatial scale
-#' @param W weight function
+#' @param K exposure function
 #'
 #' @export
 generate_mesa_dataset <- function(seed = NULL,
@@ -19,7 +19,7 @@ generate_mesa_dataset <- function(seed = NULL,
                                   beta_bar = .5,
                                   theta = .7,
                                   sigma = 1,
-                                  W = function(x) exp(-x)){
+                                  K = function(x) exp(-x)){
     ### fake gender covariate
 
     if(!is.null(seed))
@@ -32,22 +32,21 @@ generate_mesa_dataset <- function(seed = NULL,
         MESA_df <- MESA
     }
     else{
-        idno <- MESA %>% dplyr::group_by(id,visit_number) %>% dplyr::count() %>%
-            dplyr::filter(n<100) %>% dplyr::ungroup() %>%
-            dplyr::select(id) %>%
-            dplyr::pull() %>% sample(.,size=num_subj,replace=F)
-        MESA_df <- MESA %>% dplyr::filter(id %in% idno)
+        D <- uniroot(function(y) K(y) - 0.05,c(0,10))$root + 1
+        idno <- MESA %>% dplyr::select(id) %>% dplyr::pull() %>%
+            sample(.,size=num_subj,replace=F)
+        MESA_df <- MESA %>% dplyr::filter(id %in% idno,Total_Kilometers<=D)
     }
 
     X <- MESA_df %>% dplyr::group_by(id,visit_number) %>%
-        dplyr::summarise(Exposure = sum(W((Total_Kilometers / theta))) ) %>%
+        dplyr::summarise(Exposure = sum(K((Total_Kilometers / theta))) ) %>%
         dplyr::ungroup()
 
     Xbar <- X %>% dplyr::group_by(id) %>%
         dplyr::summarise(Mean_Exposure = mean(Exposure)) %>%
         dplyr::mutate(Sex = rbinom(n=dplyr::n(),size=1,prob=.5),
                          intercept = rnorm(n = dplyr::n(),sd = 1),
-                         slope = rnorm(n=dplyr::n(),sd=1.2))
+                         slope = rnorm(n=dplyr::n(), sd=1.2))
 
     X_diff <- X %>% dplyr::left_join(Xbar,by='id') %>%
         dplyr::mutate(X_diff = Exposure - Mean_Exposure,)

@@ -1,6 +1,21 @@
 #' create_table_two
 #'
-#' @param num_sims
+#' @param num_sims number of simulations to run
+#' @param num_subj number of subjects to simulate
+#' @param num_mesa_subj number of subjects to sample from MESA data for MESA analysis
+#' @param num_dists number of distances to simulate
+#' @param alpha intercept for generating outcome
+#' @param theta true spatial scale under which datasets
+#' @param delta simulated binary covariate regression effect
+#' @param beta SAP effect
+#' @param alpha_prior prior to be placed on intercept in model, must be an rstap:: namespace object
+#' @param beta_prior prior to be placed on SAP effect
+#' @param theta_prior prior to be placed on spatial scale
+#' @param delta_prior prior to be placed on simulated binary covariate effect
+#' @param iter number of iterations for which to run the stap_glm or stapdnd_glmer sampler
+#' @param warmup number of iterations to warmup the sampler
+#' @param chains number of independent MCMC chains to draw
+#' @param cores number of cores with which to run chains in parallel
 #'
 #' @export
 create_table_two <- function(num_sims = 5,
@@ -11,11 +26,17 @@ create_table_two <- function(num_sims = 5,
                              shape = 5,
                              delta = -2.2,
                              beta = .75,
-                             iter = 2E3,
-                             warmup = 1E3,
+                             alpha_prior = rstap::normal(location = 25, scale = 4, autoscale =F),
+                             beta_prior = rstap::normal(location = 0, scale = 3, autoscale = F),
+                             theta_prior = rstap::log_normal(location = 0 , scale = 1, autoscale = F),
+                             delta_prior = rstap::normal(location = 0, scale = 3, autoscale = F),
+                             iter = 4E3,
+                             warmup = 2E3,
                              chains = 1,
                              cores = 1,
                              file = NULL){
+
+    print("Simulating Data")
 
     # Exponential
     edatasets <- purrr::map(1:num_sims,function(x) generate_hpp_dataset(seed = x,
@@ -25,7 +46,7 @@ create_table_two <- function(num_sims = 5,
                                                                 theta = theta,
                                                                 delta = delta,
                                                                 beta = beta,
-                                                                W = function(x) exp(-x)))
+                                                                K = function(x) {exp(-x)}))
 
     # Weibull
 
@@ -43,7 +64,7 @@ create_table_two <- function(num_sims = 5,
                                                                          alpha = alpha,
                                                                          beta = beta,
                                                                          delta = delta,
-                                                                         W = function(x) (x<=theta)*1))
+                                                                         K = function(x) {(x<=theta)*1}) )
 
     # DLM - 2
 
@@ -51,9 +72,10 @@ create_table_two <- function(num_sims = 5,
                                                                          alpha = alpha,
                                                                          beta = beta,
                                                                          delta = delta,
-                                                                         W = function(x) (x<=theta)*(1-x^2) ))
+                                                                         K = function(x) {(x<=theta)*(1-x^2)} ))
 
     # Fit DLM under DLM
+    print("Fitting DLM simulated models under DLM Framework")
 
     dlm_lists <- purrr::map(ddatasets,function(x){
         lag <- seq(from = .1,to = floor(max(x$bef_data$Distance)), by = .1)
@@ -81,7 +103,15 @@ create_table_two <- function(num_sims = 5,
         assign("Conc", dlm_lists[[i]]$Conc, envir = globalenv())
         assign("lag",dlm_lists[[i]]$lag, envir = globalenv())
         fit <- dlmBE::dlm(outcome ~ sex + dlmBE::cr(lag,Conc))
-        cps[i] <- lag[unlist(dlmBE::changePoint(fit))[1]+1]
+        ci <- dlmBE::confint.dlMod(fit, coef=FALSE)
+        non0 <- !(ci[, 1] <= 0.05 & ci[, ncol(ci)] >= 0.05)
+        rslt <- lapply(dlmBE::lagIndex(fit),
+                       function(i) {
+                           x <- non0[i]
+                           which(x & !c(tail(x, -1), TRUE) & c(FALSE, head(x, -1)))
+                       })
+        cps[i] <- lag[unlist(rslt)[1]+1]
+        cps[which(is.na(cps))] <- max(lag)
     }
 
 
@@ -112,7 +142,15 @@ create_table_two <- function(num_sims = 5,
         assign("Conc", dlm_lists[[i]]$Conc, envir = globalenv())
         assign("lag",dlm_lists[[i]]$lag, envir = globalenv())
         fit <- dlmBE::dlm(outcome ~ sex + dlmBE::cr(lag,Conc))
-        cp2s[i] <- lag[unlist(dlmBE::changePoint(fit))[1]+1]
+        ci <- dlmBE::confint.dlMod(fit, coef=FALSE)
+        non0 <- !(ci[, 1] <= 0.05 & ci[, ncol(ci)] >= 0.05)
+        rslt <- lapply(dlmBE::lagIndex(fit),
+                       function(i) {
+                           x <- non0[i]
+                           which(x & !c(tail(x, -1), TRUE) & c(FALSE, head(x, -1)))
+                       })
+        cp2s[i] <- lag[unlist(rslt)[1]+1]
+        cp2s[which(is.na(cp2s))] <- max(lag)
     }
 
     dlm_lists <- purrr::map(edatasets,function(x){
@@ -149,6 +187,7 @@ create_table_two <- function(num_sims = 5,
                    which(x & !c(tail(x, -1), TRUE) & c(FALSE, head(x, -1)))
                })
         cpes[i] <- lag[unlist(rslt)[1]+1]
+        cpes[which(is.na(cpes))] <- max(lag)
     }
 
     dlm_lists <- purrr::map(wdatasets,function(x){
@@ -185,39 +224,40 @@ create_table_two <- function(num_sims = 5,
                    which(x & !c(tail(x, -1), TRUE) & c(FALSE, head(x, -1)))
                })
         cpws[i] <- lag[unlist(rslt)[1]+1]
+        cpws[which(is.na(cpws))] <- max(lag)
     }
 
     # STAP Model fitting
 
     # Fit DLM under Exponential
-
+    print("Fitting DLM model [1] under Exponential Exposure Function")
     de <- purrr::map(ddatasets,function(x){
         rstap::stap_glm(outcome ~ sex + sap(FF,exp),
                         subject_data = x$subject_data,
                         distance_data = x$bef_data,
                         max_distance = 10,
                         subject_ID = "subj_id",
-                        prior = rstap::normal(),
-                        prior_stap = rstap::normal(),
-                        prior_intercept = rstap::normal(location =25),
-                        prior_theta = rstap::log_normal(1,1),
+                        prior = delta_prior,
+                        prior_stap = beta_prior,
+                        prior_intercept = alpha_prior,
+                        prior_theta = theta_prior,
                         chains = chains,
                         cores = cores,
                         iter = iter,
                         warmup = warmup)})
 
     # Fit DLM under Weibull
-
+    print("Fitting DLM model [1] under Weibull Exposure Function")
     dw <- purrr::map(ddatasets,function(x){
         rstap::stap_glm(outcome~sex + sap(FF,wei),
                         subject_data = x$subject_data,
                         distance_data = x$bef_data,
                         max_distance = 10,
                         subject_ID = "subj_id",
-                        prior = rstap::normal(),
-                        prior_stap = rstap::normal(),
-                        prior_intercept = rstap::normal(location =25),
-                        prior_theta = rstap::log_normal(1,1),
+                        prior = delta_prior,
+                        prior_stap = beta_prior,
+                        prior_intercept = alpha_prior,
+                        prior_theta = theta_prior,
                         chains = chains,
                         cores = cores,
                         iter = iter,
@@ -225,16 +265,17 @@ create_table_two <- function(num_sims = 5,
 
     # Fit DLM2 under Exponential
 
+    print("Fitting DLM model [2] under Weibull Exposure Function")
     d2e <- purrr::map(d2datasets,function(x){
         rstap::stap_glm(outcome~sex + sap(FF,exp),
                         subject_data = x$subject_data,
                         distance_data = x$bef_data,
                         max_distance = 10,
                         subject_ID = "subj_id",
-                        prior = rstap::normal(),
-                        prior_stap = rstap::normal(),
-                        prior_intercept = rstap::normal(location = 25),
-                        prior_theta = rstap::log_normal(1,1),
+                        prior = delta_prior,
+                        prior_stap = beta_prior,
+                        prior_intercept = alpha_prior,
+                        prior_theta = theta_prior,
                         chains = chains,
                         cores = cores,
                         iter = iter,
@@ -242,16 +283,17 @@ create_table_two <- function(num_sims = 5,
 
     # Fit DLM2 under Weibull
 
+    print("Fitting DLM model [2] under Weibull Exposure Function")
     d2w <- purrr::map(d2datasets,function(x){
         rstap::stap_glm(outcome~sex + sap(FF,wei),
                         subject_data = x$subject_data,
                         distance_data = x$bef_data,
                         max_distance = 10,
                         subject_ID = "subj_id",
-                        prior = rstap::normal(),
-                        prior_stap = rstap::normal(),
-                        prior_intercept = rstap::normal(location =25),
-                        prior_theta = rstap::log_normal(1,1),
+                        prior = delta_prior,
+                        prior_stap = beta_prior,
+                        prior_intercept = alpha_prior,
+                        prior_theta = theta_prior,
                         chains = chains,
                         cores = cores,
                         iter = iter,
@@ -260,16 +302,17 @@ create_table_two <- function(num_sims = 5,
 
     # Fit Exponential under Exponential
 
+    print("Fitting Exponential model under Exponential Exposure Function")
     ee <- purrr::map(edatasets,function(x){
         rstap::stap_glm(outcome~sex + sap(FF,exp),
                 subject_data = x$subject_data,
                 distance_data = x$bef_data,
                 max_distance = 10,
                 subject_ID = "subj_id",
-                prior = rstap::normal(),
-                prior_stap = rstap::normal(),
-                prior_intercept = rstap::normal(location =25),
-                prior_theta = rstap::log_normal(1,1),
+                prior = delta_prior,
+                prior_stap = beta_prior,
+                prior_intercept = alpha_prior,
+                prior_theta = theta_prior,
                 chains = chains,
                 cores = cores,
                 iter = iter,
@@ -277,34 +320,34 @@ create_table_two <- function(num_sims = 5,
 
 
     # Fit Exponential under Weibull
-
+    print("Fitting Exponential model under Weibull Exposure Function")
     ew <- purrr::map(edatasets,function(x){
         rstap::stap_glm(outcome~sex + sap(FF,wei),
                 subject_data = x$subject_data,
                 distance_data = x$bef_data,
                 max_distance = 10,
                 subject_ID = "subj_id",
-                prior = rstap::normal(),
-                prior_stap = rstap::normal(),
-                prior_intercept = rstap::normal(location =25),
-                prior_theta = rstap::log_normal(1,1),
+                prior = delta_prior,
+                prior_stap = beta_prior,
+                prior_intercept = alpha_prior,
+                prior_theta = theta_prior,
                 chains = chains,
                 cores = cores,
                 iter = iter,
                 warmup = warmup)})
 
     # Fit Weibull under Exponential
-
+    print("Fitting Weibull model under Exponential Exposure Function")
     we <- purrr::map(wdatasets,function(x){
         rstap::stap_glm(outcome~sex + sap(FF,exp),
                 subject_data = x$subject_data,
                 distance_data = x$bef_data,
                 max_distance = 10,
                 subject_ID = "subj_id",
-                prior = rstap::normal(),
-                prior_stap = rstap::normal(),
-                prior_intercept = rstap::normal(location =25),
-                prior_theta = rstap::log_normal(1,1),
+                prior = delta_prior,
+                prior_stap = beta_prior,
+                prior_intercept = alpha_prior,
+                prior_theta = theta_prior,
                 cores = cores,
                 chains = chains,
                 cores = cores,
@@ -312,22 +355,23 @@ create_table_two <- function(num_sims = 5,
                 warmup = warmup)})
 
     # Fit Weibull under Weibull
-
+    print("Fitting Weibull model under Weibull Exposure Function")
     ww <- purrr::map(wdatasets,function(x){
         rstap::stap_glm(outcome ~ sex + sap(FF,wei),
                 subject_data = x$subject_data,
                 distance_data = x$bef_data,
                 max_distance = 10,
                 subject_ID = "subj_id",
-                prior = rstap::normal(),
-                prior_stap = rstap::normal(),
-                prior_intercept = rstap::normal(location = 25),
-                prior_theta = rstap::log_normal(1,1),
+                prior = delta_prior,
+                prior_stap = beta_prior,
+                prior_intercept = alpha_prior,
+                prior_theta = theta_prior,
                 chains = chains,
                 cores = cores,
                 iter = iter,
                 warmup = warmup)})
 
+    print("Aggregating Simulation Statistics")
     term_step_d <- tibble::tibble(sim_id = 1:num_sims,
                               Simulated_Function = "Step Function",
                               Modeled_Function = "DLM",
@@ -414,10 +458,17 @@ create_table_two <- function(num_sims = 5,
                             term_q_d, term_q_e,term_q_w,
                             term_e_d,term_exp,term_e_w,
                             term_w_d,term_w_e,term_wei) %>%
-        dplyr::mutate(Termination_Difference=abs(True_termination - Estimate_termination)) %>%
-        dplyr::group_by(Simulated_Function,Modeled_Function) %>%
-        dplyr::summarise(mean_difference = mean(Termination_Difference)) %>%
-        dplyr::ungroup() %>%
-        tidyr::spread(Modeled_Function,mean_difference)
+            dplyr::mutate(Termination_Difference=abs(True_termination - Estimate_termination)) %>%
+            dplyr::group_by(Simulated_Function,Modeled_Function) %>%
+            dplyr::summarise(mean_difference = mean(Termination_Difference)) %>%
+            dplyr::ungroup() %>%
+            tidyr::spread(Modeled_Function,mean_difference) %>%
+        dplyr::select(Simulated_Function,Exponential,Weibull,DLM)
+    return(list(summary_table = out,
+                raw_table = dplyr::bind_rows(term_step_d,term_step_e,term_step_w,
+                                                                  term_q_d, term_q_e,term_q_w,
+                                                                  term_e_d,term_exp,term_e_w,
+                                                                  term_w_d,term_w_e,term_wei) %>%
+                    dplyr::mutate(Termination_Difference=abs(True_termination - Estimate_termination))))
 }
 

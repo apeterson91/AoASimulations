@@ -6,10 +6,44 @@
 \usage{
 create_table_two(num_sims = 5, num_subj = 100, num_dists = 30,
   alpha = 23, theta = 0.5, shape = 5, delta = -2.2, beta = 0.75,
-  iter = 2000, warmup = 1000, chains = 1, cores = 1, file = NULL)
+  alpha_prior = rstap::normal(location = 25, scale = 4, autoscale = F),
+  beta_prior = rstap::normal(location = 0, scale = 3),
+  theta_prior = rstap::log_normal(location = 1, scale = 1),
+  delta_prior = rstap::normal(location = 0, scale = 3), iter = 2000,
+  warmup = 1000, chains = 1, cores = 1, file = NULL)
 }
 \arguments{
-\item{num_sims}{}
+\item{num_sims}{number of simulations to run}
+
+\item{num_subj}{number of subjects to simulate}
+
+\item{num_dists}{number of distances to simulate}
+
+\item{alpha}{intercept for generating outcome}
+
+\item{theta}{true spatial scale under which datasets}
+
+\item{delta}{simulated binary covariate regression effect}
+
+\item{beta}{SAP effect}
+
+\item{alpha_prior}{prior to be placed on intercept in model, must be an rstap:: namespace object}
+
+\item{beta_prior}{prior to be placed on SAP effect}
+
+\item{theta_prior}{prior to be placed on spatial scale}
+
+\item{delta_prior}{prior to be placed on simulated binary covariate effect}
+
+\item{iter}{number of iterations for which to run the stap_glm or stapdnd_glmer sampler}
+
+\item{warmup}{number of iterations to warmup the sampler}
+
+\item{chains}{number of independent MCMC chains to draw}
+
+\item{cores}{number of cores with which to run chains in parallel}
+
+\item{num_mesa_subj}{number of subjects to sample from MESA data for MESA analysis}
 }
 \description{
 create_table_two

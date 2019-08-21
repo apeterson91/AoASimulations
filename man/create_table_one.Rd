@@ -7,13 +7,19 @@
 create_table_one(num_sims = 5, num_subj = 100L, num_mesa_subj = 50L,
   num_dists = 30, alpha = 23, theta = 0.5, delta = -2.2,
   beta = 0.75, beta_bar = 0.85, alpha_prior = rstap::normal(location
-  = 25, autoscale = F), beta_prior = rstap::normal(),
-  theta_prior = rstap::log_normal(location = 1, scale = 1),
-  delta_prior = rstap::normal(), iter = 2000, warmup = 1000,
-  chains = 1, cores = 1, file = NULL)
+  = 25, scale = 4, autoscale = F), beta_prior = rstap::normal(location =
+  0, scale = 3), theta_prior = rstap::log_normal(location = 1, scale =
+  1), delta_prior = rstap::normal(location = 0, scale = 3),
+  iter = 2000, warmup = 1000, chains = 1, cores = 1, file = NULL)
 }
 \arguments{
 \item{num_sims}{number of simulations to run}
+
+\item{num_subj}{number of subjects to simulate}
+
+\item{num_mesa_subj}{number of subjects to sample from MESA data for MESA analysis}
+
+\item{num_dists}{number of distances to simulate}
 
 \item{alpha}{intercept for generating outcome}
 
@@ -23,7 +29,7 @@ create_table_one(num_sims = 5, num_subj = 100L, num_mesa_subj = 50L,
 
 \item{beta}{SAP effect}
 
-\item{alpha_prior}{prior to be placed on intercept in model}
+\item{alpha_prior}{prior to be placed on intercept in model, must be an rstap:: namespace object}
 
 \item{beta_prior}{prior to be placed on SAP effect}
 
@@ -40,10 +46,6 @@ create_table_one(num_sims = 5, num_subj = 100L, num_mesa_subj = 50L,
 \item{cores}{number of cores with which to run chains in parallel}
 
 \item{file}{path to file to save tables to in .tex format}
-
-\item{n}{number of subjects to simulate}
-
-\item{d}{number of distances to simulate}
 }
 \value{
 list of two table components table1_top -

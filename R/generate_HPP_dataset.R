@@ -13,7 +13,7 @@
 #' @param delta confounder effect
 #' @param beta true bef effect
 #' @param theta true spatial scale
-#' @param W weight function
+#' @param K exposure function
 generate_hpp_dataset <- function(seed,
                                  num_subj = 100L,
                                  num_dists = 30L,
@@ -28,7 +28,7 @@ generate_hpp_dataset <- function(seed,
                                  theta = 0.5,
                                  shape = NULL,
                                  sigma = 1,
-                                 W = function(x,y) exp(-x)){
+                                 K = function(x) exp(-x)){
 
     if(!is.null(seed))
         set.seed(seed)
@@ -59,7 +59,7 @@ generate_hpp_dataset <- function(seed,
     distances <- tidyr::gather(distances,dplyr::contains("BEF"),key = "BEF",value="Distance")
     if(is.null(shape))
         X <- distances %>% dplyr::group_by(subj_id) %>%
-        dplyr::summarise(Exposure = sum(W(Distance/theta))) %>%
+        dplyr::summarise(Exposure = sum(K(Distance/theta))) %>%
         dplyr::ungroup() %>%
         dplyr::pull(Exposure)
     else

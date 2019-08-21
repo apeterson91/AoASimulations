@@ -21,7 +21,7 @@ generate_dlm_dataset <- function(seed = NULL,
                                  delta = -2.3,
                                  beta = .1,
                                  sigma = 1,
-                                 W = function(x) (x<=1.2)*1){
+                                 K = function(x) {(x<=1.2)*1 }){
     if(!is.null(seed))
         set.seed(seed)
     else
@@ -49,7 +49,7 @@ generate_dlm_dataset <- function(seed = NULL,
         dplyr::mutate(BEF = "FF")
 
     X <- dists %>% dplyr::group_by(subj_id) %>%
-        dplyr::summarise(Exposure = sum(W(Distance))) %>%
+        dplyr::summarise(Exposure = sum(K(Distance))) %>%
         dplyr::ungroup() %>%
         dplyr::select(Exposure) %>%
         dplyr::pull()

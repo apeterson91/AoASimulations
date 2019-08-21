@@ -15,7 +15,7 @@ Imports:
     tibble,
     tidyr,
     purrr,
-    rstap (>= 1.1.0),
+    rstap (>= 1.1.3),
     tables,
     Hmisc,
     dlmBE

@@ -15,7 +15,7 @@
 #' @param delta confounder effect
 #' @param beta true bef effect
 #' @param theta true spatial scale
-#' @param W weight function
+#' @param K exposure function
 #'
 #' @export
 generate_matern_dataset <- function(seed = NULL,
@@ -34,7 +34,7 @@ generate_matern_dataset <- function(seed = NULL,
                                   beta = .1,
                                   theta = 0.5,
                                   sigma = 1,
-                                  W = function(x) exp(-x)){
+                                  K = function(x) exp(-x)){
 
     if(!is.null(seed))
         set.seed(seed)
@@ -77,7 +77,7 @@ generate_matern_dataset <- function(seed = NULL,
     distances <- dplyr::mutate(dplyr::as_tibble(distances),subj_id = 1:dplyr::n())
     distances <- tidyr::gather(distances,dplyr::contains("BEF"),key = "BEF",value="Distance")
     X <- distances %>% dplyr::group_by(subj_id) %>%
-        dplyr::summarise(Exposure = sum(W(Distance/theta))) %>%
+        dplyr::summarise(Exposure = sum(K(Distance/theta))) %>%
         dplyr::ungroup() %>%
         dplyr::pull(Exposure)
     sex <- rbinom(n = nrow(subj_data),size = 1,prob = .5)
