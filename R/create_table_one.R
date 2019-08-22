@@ -172,24 +172,22 @@ create_table_one <- function(num_sims = 5,
                                                                              beta_bar = beta_bar,
                                                                              K = function(x) exp(-x)))
 
-    i <- 1
+
     MESA_models <- purrr::map(MESA_datasets,function(x){
-        cat(paste0("MESA Model: ",i))
         rstap::stapdnd_glmer(outcome~sex + sap_dnd_bar(FF,exp) + (visit_number|id),
                              subject_data = x$subject_data,
                              distance_data = x$bef_data,
                              max_distance = 10,
                              subject_ID = "id",
                              group_ID = "visit_number",
-                             prior = rstap::normal(),
-                             prior_stap = rstap::normal(),
-                             prior_intercept = rstap::normal(location = 25),
-                             prior_theta = rstap::log_normal(1,1),
+                             prior = delta_prior,
+                             prior_stap = beta_prior,
+                             prior_intercept = alpha_prior,
+                             prior_theta = theta_prior,
                              chains = chains,
                              cores = cores,
                              iter = iter,
                              warmup = warmup)
-        i <- i + 1
         })
 
 
