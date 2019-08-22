@@ -225,8 +225,8 @@ create_table_one <- function(num_sims = 5,
 
 
     if(!is.null(file)){
-        Hmisc::latex(tab1a, file = file, booktabs = T )
-        Hmisc::latex(tab1b, file = file, booktabs = T )
+        Hmisc::latex(tab1a, file = paste0(file,"/tab1a.tex"), booktabs = T )
+        Hmisc::latex(tab1b, file = paste0(file,"/tab1b.tex"), booktabs = T )
     }
     else{
         Hmisc::latex(tab1a,file= "~/Desktop/tab1a.tex", booktabs = T)

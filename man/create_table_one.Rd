@@ -9,9 +9,9 @@ create_table_one(num_sims = 5, num_subj = 100L, num_mesa_subj = 50L,
   beta = 0.75, beta_bar = 0.85, alpha_prior = rstap::normal(location
   = 25, scale = 4, autoscale = F), beta_prior = rstap::normal(location =
   0, scale = 3, autoscale = F), theta_prior = rstap::log_normal(location
-  = 0, scale = 1, autoscale = F), delta_prior = rstap::normal(location =
-  0, scale = 3, autoscale = F), iter = 4000, warmup = 2000,
-  chains = 1, cores = 1, file = NULL)
+  = 0, scale = 1), delta_prior = rstap::normal(location = 0, scale = 3,
+  autoscale = F), iter = 4000, warmup = 2000, chains = 1,
+  cores = 1, file = NULL)
 }
 \arguments{
 \item{num_sims}{number of simulations to run}
