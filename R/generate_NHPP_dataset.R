@@ -1,8 +1,8 @@
 #' generates nonhomogenous poisson process data
 #'
 #' @param seed an integer for set.seed()
-#' @param num_subj number of subjects to simulate
-#' @param num_dists number of distances/subject to simulate
+#' @param num_subj number of subjects position processes to simulate
+#' @param num_dists number of processes to simulate
 #' @param max_dist upper bound on distances to include
 #' @param bef_xlim x coordinate bounds from which to simulate befs
 #' @param bef_ylim y coordinate bounds from which to simulate bef positions
@@ -17,9 +17,9 @@
 #'
 #' @export
 generate_nhpp_dataset <- function(seed = NULL,
-                                 num_subj = 100L,
-                                 num_dists = 30L,
-                                 Lambda_xy = function(x,y){ 20 - x^2 -y^2 },
+                                 num_subj = 5L,
+                                 num_dists = 2L,
+                                 Lambda_xy = function(x,y){ (3 - x^2 -y^2) },
                                  max_dist = 5L,
                                  bef_xlim = c(-1,1),
                                  bef_ylim=c(-1,1),
@@ -47,22 +47,30 @@ generate_nhpp_dataset <- function(seed = NULL,
 
     bef_points <- spatstat::rpoispp(lambda =Lambda_xy,
                                     win = bef_window,
-                                    nsim = 100)
+                                    nsim = 10) ## Need to make sure enough data points are generated
 
     subj_points <- spatstat::rpoispp(lambda = Lambda_xy,
                                      win = subj_window,
-                                     nsim = 100)
+                                     nsim = 10)
 
 
-    bef_posdata <-  tibble::tibble(x= unlist(purrr::map(bef_points,function(z) z[["x"]])),
-                            y = unlist(purrr::map(bef_points,function(z) z[["y"]]))) %>%
-        dplyr::sample_n(num_dists)
+    bef_posdata <- purrr::map2_dfr(1:length(bef_points),bef_points,function(a,b){
+									   tibble::tibble(sim_id = a,
+													  x = b$x,
+													  y = b$y)})
+
+	sample_ics <- sample(bef_posdata$sim_id,num_dists)
+	bef_posdata <- bef_posdata %>% dplyr::filter(sim_id %in% sample_ics)
 
 
-    subj_data <- tibble::tibble(x_coord = unlist(purrr::map(subj_points,function(z) z[["x"]])),
-                                    y_coord = unlist(purrr::map(subj_points,function(z) z[["y"]]))) %>%
-        dplyr::sample_n(num_subj) %>%
-        dplyr::mutate(subj_id = 1:dplyr::n())
+	subj_data  <- purrr::map2_dfr(1:length(subj_points),subj_points,function(a,b){
+									  tibble::tibble(sim_id = a,
+													 x_coord = b$x,
+													 y_coord = b$y)})
+
+	sample_ics  <-  sample(subj_data$sim_id,num_subj)
+	subj_data <- subj_data %>% dplyr::filter(sim_id %in% sample_ics) %>%
+		dplyr::mutate(subj_id = 1:dplyr::n())
 
 
     distances <- fields::rdist(as.matrix(subj_data)[,c("x_coord","y_coord")],

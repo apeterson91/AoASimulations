@@ -14,8 +14,9 @@
 #' @param delta_prior prior to be placed on simulated binary covariate effect
 #' @param iter number of iterations for which to run the stap_glm or stapdnd_glmer sampler
 #' @param warmup number of iterations to warmup the sampler
-#' @param chains number of independent MCMC chains to draw
+#' @param chains number of independent MCMC chains to draw #'
 #' @param cores number of cores with which to run chains in parallel
+#' @return list with 4 values, the raw and summary differences in beta and terminal distance
 #'
 #' @export
 create_table_two <- function(num_sims = 5,
@@ -464,11 +465,106 @@ create_table_two <- function(num_sims = 5,
             dplyr::ungroup() %>%
             tidyr::spread(Modeled_Function,mean_difference) %>%
         dplyr::select(Simulated_Function,Exponential,Weibull,DLM)
-    return(list(summary_table = out,
-                raw_table = dplyr::bind_rows(term_step_d,term_step_e,term_step_w,
-                                                                  term_q_d, term_q_e,term_q_w,
-                                                                  term_e_d,term_exp,term_e_w,
-                                                                  term_w_d,term_w_e,term_wei) %>%
-                    dplyr::mutate(Termination_Difference=abs(True_termination - Estimate_termination))))
+
+    raw_table_one <-  dplyr::bind_rows(term_step_d,term_step_e,term_step_w,
+                                 term_q_d, term_q_e,term_q_w,
+                                 term_e_d,term_exp,term_e_w,
+                                 term_w_d,term_w_e,term_wei) %>%
+        dplyr::mutate(Termination_Difference=abs(True_termination - Estimate_termination))
+
+
+
+# |hat(beta) - beta| table ------------------------------------------------------
+
+    print("Aggregating Simulation Statistics")
+
+
+
+
+    term_step_e <- tibble::tibble(sim_id = 1:num_sims,
+                                  Simulated_Function = rep("Step Function",num_sims),
+                                  Modeled_Function = rep("Exponential", num_sims),
+                                  True_beta = beta,
+                                  Estimate_beta = purrr::map_dbl(de,function(x)  coef(x)["FF"] ))
+
+
+    term_step_w <- tibble::tibble(sim_id = 1:num_sims,
+                                  Simulated_Function = rep("Step Function",num_sims),
+                                  Modeled_Function = rep("Weibull", num_sims),
+                                  True_beta = beta,
+                                  Estimate_beta = purrr::map_dbl(dw,function(x) coef(x)["FF"]))
+
+
+    term_q_e <- tibble::tibble(sim_id = 1:num_sims,
+                               Simulated_Function = rep("Quadratic Step",num_sims),
+                               Modeled_Function = rep("Exponential", num_sims),
+                               True_beta = beta,
+                               Estimate_beta = purrr::map_dbl(d2e,function(x) coef(x)["FF"] ))
+
+
+    term_q_w <- tibble::tibble(sim_id = 1:num_sims,
+                               Simulated_Function = rep("Quadratic Step",num_sims),
+                               Modeled_Function = rep("Weibull", num_sims),
+                               True_beta = beta,
+                               Estimate_beta = purrr::map_dbl(d2w,function(x) coef(x)["FF"] ))
+
+    term_exp  <- tibble::tibble(sim_id = 1:num_sims,
+                                Simulated_Function = rep("Exponential",num_sims),
+                                Modeled_Function = rep("Exponential",num_sims),
+                                True_beta = beta,
+                                Estimate_beta = purrr::map_dbl(ee,function(a) coef(a)["FF"])
+    )
+
+    term_e_w <- tibble::tibble(sim_id = 1:num_sims,
+                               Simulated_Function = rep("Exponential",num_sims),
+                               Modeled_Function = rep("Weibull",num_sims),
+                               True_beta = beta,
+                               Estimate_beta = purrr::map_dbl(ew,function(a) coef(a)["FF"])
+    )
+
+
+    term_w_e <- tibble::tibble(sim_id = 1:num_sims,
+                               Simulated_Function = rep("Weibull",num_sims),
+                               Modeled_Function = rep("Exponential",num_sims),
+                               True_beta = beta,
+                               Estimate_beta = purrr::map_dbl(we,function(a) coef(a)["FF"])
+    )
+
+    term_wei <- tibble::tibble(sim_id = 1:num_sims,
+                               Simulated_Function = rep("Weibull",num_sims),
+                               Modeled_Function = rep("Weibull",num_sims),
+                               True_beta = uniroot(function(x){ exp(-(x/theta)^shape) - 0.05},interval = c(0,10))$root,
+                               Estimate_beta = purrr::map_dbl(ww,function(a) coef(a)["FF"])
+    )
+
+    out2 <- dplyr::bind_rows(term_step_e,term_step_w,
+                             term_q_e,term_q_w,
+                            term_exp,term_e_w,
+                            term_w_e,term_wei) %>%
+        dplyr::mutate(Effect_Difference = abs(True_beta - Estimate_beta)) %>%
+        dplyr::group_by(Simulated_Function,Modeled_Function) %>%
+        dplyr::summarise(mean_difference = mean(Effect_Difference)) %>%
+        dplyr::ungroup() %>%
+        tidyr::spread(Modeled_Function,mean_difference) %>%
+        dplyr::select(Simulated_Function,Exponential,Weibull)
+
+
+    raw_table_two <-  dplyr::bind_rows(term_step_e,term_step_w,
+                                        term_q_e,term_q_w,
+                                       term_exp,term_e_w,
+                                       term_w_e,term_wei) %>%
+        dplyr::mutate(Effect_Difference = abs(True_beta - Estimate_beta))
+
+
+# Return values -----------------------------------------------------------
+
+
+
+
+    return(list(summary_distance_table = out,
+                raw_distance_table = raw_table_one,
+                summary_beta_table = out2,
+                raw_beta_table = raw_table_two
+                ))
 }
 

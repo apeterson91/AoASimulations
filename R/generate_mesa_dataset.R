@@ -2,6 +2,8 @@
 #'
 #' @param seed an integer for set.seed()
 #' @param num_subj number of subjects to simulate
+#' @param prop_dist proportion of MESA distances to use -
+#' set to 1 for all MESA distances, or smaller to speed model fitting time
 #' @param max_dist upper bound on distances to include
 #' @param alpha true intercept value
 #' @param delta confounder effect
@@ -12,6 +14,7 @@
 #' @export
 generate_mesa_dataset <- function(seed = NULL,
                                   num_subj = 100,
+								  prop_dist = .65,
                                   max_dist = 10,
                                   alpha = 23,
                                   delta = -2.2,
@@ -35,7 +38,8 @@ generate_mesa_dataset <- function(seed = NULL,
         D <- uniroot(function(y) K(y) - 0.05,c(0,10))$root + 1
         idno <- MESA %>% dplyr::select(id) %>% dplyr::pull() %>%
             sample(.,size=num_subj,replace=F)
-        MESA_df <- MESA %>% dplyr::filter(id %in% idno,Total_Kilometers<=D)
+        MESA_df <- MESA %>% dplyr::filter(id %in% idno, Total_Kilometers<=D) %>%
+			dplyr::group_by(id,visit_number) %>% dplyr::sample_frac(prop_dist) %>% dplyr::ungroup()
     }
 
     X <- MESA_df %>% dplyr::group_by(id,visit_number) %>%

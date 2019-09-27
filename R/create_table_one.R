@@ -23,7 +23,7 @@
 #' The two remaining "raw" table components contain the pre-aggregation data-frames
 #' @export
 create_table_one <- function(num_sims = 5,
-                             num_subj = 100L,
+                             num_subj = 50L,
                              num_mesa_subj = 50L,
                              num_dists = 30,
                              alpha = 23,
@@ -69,6 +69,8 @@ create_table_one <- function(num_sims = 5,
                                  Parameter = c(rep("Beta",num_sims),rep("Theta",num_sims)),
                                  coverage = c(purrr::map_dbl(models,function(x) check_coverage(x,c("FF"=beta))),
                                               purrr::map_dbl(models,function(x) check_coverage(x,c("FF_spatial_scale"=theta)))),
+								 Difference = c(purrr::map_dbl(models,function(x) abs_diff(x,c("FF"=beta))),
+												purrr::map_dbl(models,function(x) abs_diff(x,c("FF_spatial_scale"=theta)))),
                                  `Cook & Gelman` =  c(purrr::map_dbl(models,function(x) calculate_CG_stat(x,c("FF"=beta))),
                                                       purrr::map_dbl(models,function(x) calculate_CG_stat(x,c("FF_spatial_scale"=theta)))),
                                  interval_length = c(purrr::map_dbl(models,function(x) interval_length(x,c("FF"))),
@@ -80,10 +82,8 @@ create_table_one <- function(num_sims = 5,
                                   RMSE = purrr::map_dbl(models,calculate_RMSE_median))
 
     ## NHPP
-
+    ## num subj and num_dists are determined randomly
     nhpp_datasets <- purrr::map(1:num_sims,function(x) generate_nhpp_dataset(seed = x,
-                                                                             num_subj = num_subj,
-                                                                             num_dists = num_dists,
                                                                              alpha = alpha,
                                                                              theta = theta,
                                                                              delta = delta,
@@ -109,6 +109,8 @@ create_table_one <- function(num_sims = 5,
                                   Parameter = c(rep("Beta",num_sims),rep("Theta",num_sims)),
                                   coverage =c(purrr::map_dbl(nhpp_models,function(x) check_coverage(x,c("FF"=beta))),
                                               purrr::map_dbl(nhpp_models,function(x) check_coverage(x,c("FF_spatial_scale"=theta)))),
+								  Difference = c(purrr::map_dbl(nhpp_models,function(x) abs_diff(x,c("FF"=beta))),
+												purrr::map_dbl(nhpp_models,function(x) abs_diff(x,c("FF_spatial_scale"=theta)))),
                                   `Cook & Gelman` =  c(purrr::map_dbl(nhpp_models,function(x) calculate_CG_stat(x,c("FF"=beta))),
                                                        purrr::map_dbl(nhpp_models,function(x) calculate_CG_stat(x,c("FF_spatial_scale"=theta) ))),
                                   interval_length = c(purrr::map_dbl(nhpp_models,function(x) interval_length(x,c("FF"))),
@@ -121,10 +123,8 @@ create_table_one <- function(num_sims = 5,
                                    RMSE = purrr::map_dbl(nhpp_models,calculate_RMSE_median))
 
     ## Matern
-
+    ## num subj and num dists determined randomly
     matern_datasets <- purrr::map(1:num_sims,function(x) generate_matern_dataset(seed = x,
-                                                                                 num_subj = num_subj,
-                                                                                 num_dists = num_dists,
                                                                                  alpha = alpha,
                                                                                  theta = theta,
                                                                                  delta = delta,
@@ -150,6 +150,8 @@ create_table_one <- function(num_sims = 5,
                                     Parameter = c(rep("Beta",num_sims),rep("Theta",num_sims)),
                                     coverage =c(purrr::map_dbl(matern_models,function(x) check_coverage(x,c("FF"=beta))),
                                                 purrr::map_dbl(matern_models,function(x) check_coverage(x,c("FF_spatial_scale"= theta)))),
+								    Difference = c(purrr::map_dbl(matern_models,function(x) abs_diff(x,c("FF"=beta))),
+												purrr::map_dbl(matern_models,function(x) abs_diff(x,c("FF_spatial_scale"=theta)))),
                                     `Cook & Gelman` =  c(purrr::map_dbl(matern_models,function(x) calculate_CG_stat(x,c("FF"=beta) )),
                                                          purrr::map_dbl(matern_models,function(x) calculate_CG_stat(x,c("FF_spatial_scale"=theta)))),
                                     interval_length = c(purrr::map_dbl(matern_models,function(x) interval_length(x,c("FF"))),
@@ -196,6 +198,8 @@ create_table_one <- function(num_sims = 5,
                                   Parameter = c(rep("Beta",num_sims),rep("Theta",num_sims)),
                                   coverage =c(purrr::map_dbl(MESA_models,function(x) check_coverage(x,c("FF_dnd"=beta))),
                                               purrr::map_dbl(MESA_models,function(x) check_coverage(x,c("FF_spatial_scale"=theta)))),
+							   	  Difference = c(purrr::map_dbl(MESA_models,function(x) abs_diff(x,c("FF_dnd"=beta))),
+												purrr::map_dbl(MESA_models,function(x) abs_diff(x,c("FF_spatial_scale"=theta)))),
                                   `Cook & Gelman` =  c(purrr::map_dbl(MESA_models,function(x) calculate_CG_stat(x,c("FF_dnd"=beta),TRUE)),
                                                        purrr::map_dbl(MESA_models,function(x) calculate_CG_stat(x,c("FF_spatial_scale"=theta),TRUE))),
                                   interval_length = c(purrr::map_dbl(MESA_models,function(x) interval_length(x,c("FF_dnd"))),
@@ -215,7 +219,7 @@ create_table_one <- function(num_sims = 5,
 
     require(tables)
     tab1a <- tabular( Format(digits=2)*
-                          (interval_length + coverage)*(Parameter)*(mean + sd) +
+                          (interval_length + coverage + Difference)*(Parameter)*(mean + sd) +
                           Format(digits=2)*(`Cook & Gelman`)*(Parameter)*(sum) ~ (`Spatial Pattern`) ,
                       data = output )
 

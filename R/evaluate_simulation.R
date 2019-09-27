@@ -25,6 +25,22 @@ interval_length <- function(model,par,prob = .95){
     return(median(ci[,2]-ci[,1]))
 }
 
+#' Calculate Absolute difference in true-median beta
+#'
+#' @param model stapreg object from rstap package
+#' @param par parameter named vector parameter
+#' with true parameter value as elements
+abs_diff  <- function(model,par){
+	nm <- names(par)
+	if(!(nm %in% colnames(as.matrix(model))))
+		stop("par must be a named vector estimated in the model")
+
+	estimates <- apply(as.matrix(model)[,nm,drop = FALSE],2,median)
+
+	return(abs(estimates - par))
+}
+
+
 #' calculate Median Root Mean Square Error
 #'
 #' @param model stapreg object from rstap package
