@@ -14,7 +14,7 @@
 #' @export
 generate_mesa_dataset <- function(seed = NULL,
                                   num_subj = 100,
-								  prop_dist = .65,
+								  prop_dist = .85,
                                   max_dist = 10,
                                   alpha = 23,
                                   delta = -2.2,
