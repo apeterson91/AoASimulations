@@ -39,11 +39,14 @@ create_table_two(num_sims = 5, num_subj = 100, num_dists = 30,
 
 \item{warmup}{number of iterations to warmup the sampler}
 
-\item{chains}{number of independent MCMC chains to draw}
+\item{chains}{number of independent MCMC chains to draw #'}
 
 \item{cores}{number of cores with which to run chains in parallel}
 
 \item{num_mesa_subj}{number of subjects to sample from MESA data for MESA analysis}
+}
+\value{
+list with 4 values, the raw and summary differences in beta and terminal distance
 }
 \description{
 create_table_two

@@ -4,7 +4,7 @@
 \alias{create_table_one}
 \title{create_table_one in AoAS paper}
 \usage{
-create_table_one(num_sims = 5, num_subj = 100L, num_mesa_subj = 50L,
+create_table_one(num_sims = 5, num_subj = 50L, num_mesa_subj = 50L,
   num_dists = 30, alpha = 23, theta = 0.5, delta = -2.2,
   beta = 0.75, beta_bar = 0.85, alpha_prior = rstap::normal(location
   = 25, scale = 4, autoscale = F), beta_prior = rstap::normal(location =

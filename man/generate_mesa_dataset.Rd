@@ -4,14 +4,17 @@
 \alias{generate_mesa_dataset}
 \title{generates stap dataset using MESA HFS-cohort distances}
 \usage{
-generate_mesa_dataset(seed = NULL, num_subj = 100, max_dist = 10,
-  alpha = 23, delta = -2.2, beta = 0.1, beta_bar = 0.5,
-  theta = 0.7, sigma = 1, K = function(x) exp(-x))
+generate_mesa_dataset(seed = NULL, num_subj = 100, prop_dist = 0.85,
+  max_dist = 10, alpha = 23, delta = -2.2, beta = 0.1,
+  beta_bar = 0.5, theta = 0.7, sigma = 1, K = function(x) exp(-x))
 }
 \arguments{
 \item{seed}{an integer for set.seed()}
 
 \item{num_subj}{number of subjects to simulate}
+
+\item{prop_dist}{proportion of MESA distances to use -
+set to 1 for all MESA distances, or smaller to speed model fitting time}
 
 \item{max_dist}{upper bound on distances to include}
 
