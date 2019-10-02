@@ -18,7 +18,7 @@
 #' @export
 generate_nhpp_dataset <- function(seed = NULL,
                                  num_subj = 5L,
-                                 num_dists = 2L,
+                                 num_dists = 3L,
                                  Lambda_xy = function(x,y){ (3 - x^2 -y^2) },
                                  max_dist = 5L,
                                  bef_xlim = c(-1,1),
