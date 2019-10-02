@@ -4,7 +4,7 @@
 \alias{generate_nhpp_dataset}
 \title{generates nonhomogenous poisson process data}
 \usage{
-generate_nhpp_dataset(seed = NULL, num_subj = 5L, num_dists = 2L,
+generate_nhpp_dataset(seed = NULL, num_subj = 5L, num_dists = 3L,
   Lambda_xy = function(x, y) {     (3 - x^2 - y^2) }, max_dist = 5L,
   bef_xlim = c(-1, 1), bef_ylim = c(-1, 1), subj_xlim = c(-1, 1),
   subj_ylim = c(-1, 1), alpha = 25, delta = -2.3, beta = 0.1,
