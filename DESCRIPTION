@@ -1,4 +1,4 @@
-Package: AoASimulations
+Package: STAPSimulations
 Type: Package
 Title: Recreates Tables in Peterson et al. Annals of Applied Statistics paper.
 Version: 0.1.0

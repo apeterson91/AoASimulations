@@ -470,7 +470,8 @@ create_table_two <- function(num_sims = 5,
                                  term_q_d, term_q_e,term_q_w,
                                  term_e_d,term_exp,term_e_w,
                                  term_w_d,term_w_e,term_wei) %>%
-        dplyr::mutate(Termination_Difference=abs(True_termination - Estimate_termination))
+        dplyr::mutate(Termination_Difference=abs(True_termination - Estimate_termination),
+                      Percent_Difference = Termination_Difference/True_termination)
 
 
 
@@ -541,9 +542,10 @@ create_table_two <- function(num_sims = 5,
                              term_q_e,term_q_w,
                             term_exp,term_e_w,
                             term_w_e,term_wei) %>%
-        dplyr::mutate(Effect_Difference = abs(True_beta - Estimate_beta)) %>%
+        dplyr::mutate(Effect_Difference = abs(True_beta - Estimate_beta),
+                      Percent_Difference = Effect_Difference/True_beta) %>%
         dplyr::group_by(Simulated_Function,Modeled_Function) %>%
-        dplyr::summarise(mean_difference = mean(Effect_Difference)) %>%
+        dplyr::summarise(mean_difference = mean(Percent_Difference)) %>%
         dplyr::ungroup() %>%
         tidyr::spread(Modeled_Function,mean_difference) %>%
         dplyr::select(Simulated_Function,Exponential,Weibull)
@@ -553,7 +555,8 @@ create_table_two <- function(num_sims = 5,
                                         term_q_e,term_q_w,
                                        term_exp,term_e_w,
                                        term_w_e,term_wei) %>%
-        dplyr::mutate(Effect_Difference = abs(True_beta - Estimate_beta))
+        dplyr::mutate(Effect_Difference = abs(True_beta - Estimate_beta),
+                      Percent_Difference = Effect_Difference/True_beta)
 
 
 # Return values -----------------------------------------------------------
