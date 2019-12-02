@@ -1,17 +1,16 @@
-# AoASimulations
+# STAPSimulations 
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of AoASimulations is to reproduce the tables in Peterson et al. Annals of Applied Statistics
-paper concerning Spatial Temporal Aggregated Predictors.
+The goal of STAPSimulations is to reproduce the tables in the Peterson et al. paper concerning Spatial Temporal Aggregated Predictors.
 
 ## Installation
 
-You can install the released version of AoASimulations from [github](https://github.com) with:
+You can install the released version of STAPSimulations from [github](https://github.com) with:
 
 ``` r
-devtools::install_github("https://github.com/apeterson91/AoASimulations")
+devtools::install_github("https://github.com/apeterson91/STAPSimulations")
 ```
 
 ## Example
@@ -22,7 +21,7 @@ specified, tex versions of the tables will be saved to the user's desktop. Be aw
 that table 1 in the paper is a combination of both table 1 a and table 1b in this package.
 
 ``` r
-library(AoASimulations)
+library(STAPSimulations)
 create_table_one()
 create_table_two()
 ```
