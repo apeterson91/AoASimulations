@@ -3,7 +3,6 @@
 #' @param seed an integer for set.seed()
 #' @param num_subj number of subjects position processes to simulate
 #' @param num_dists number of processes to simulate
-#' @param max_dist upper bound on distances to include
 #' @param bef_xlim x coordinate bounds from which to simulate befs
 #' @param bef_ylim y coordinate bounds from which to simulate bef positions
 #' @param subj_xlim x coordinate bounds from which to simulate subject positions
@@ -17,17 +16,16 @@
 #'
 #' @export
 generate_nhpp_dataset <- function(seed = NULL,
-                                 num_subj = 5L,
-                                 num_dists = 3L,
+                                 num_subj = 6L,
+                                 num_dists = 4L,
                                  Lambda_xy = function(x,y){ (3 - x^2 -y^2) },
-                                 max_dist = 5L,
                                  bef_xlim = c(-1,1),
                                  bef_ylim=c(-1,1),
                                  subj_xlim = c(-1,1),
                                  subj_ylim = c(-1,1),
-                                 alpha = 25,
-                                 delta = -2.3,
-                                 beta = .1,
+                                 alpha = 23,
+                                 delta = -2.2,
+                                 beta = .75,
                                  theta = 0.5,
                                  sigma = 1,
                                  K = function(x) exp(-x)){
@@ -45,13 +43,13 @@ generate_nhpp_dataset <- function(seed = NULL,
     subj_window <- spatstat::as.owin(list(xmin=subj_xlim[1],xmax=subj_xlim[2],
                                           ymin=subj_ylim[1],ymax=subj_xlim[2]))
 
-    bef_points <- spatstat::rpoispp(lambda =Lambda_xy,
+    bef_points <- spatstat::rpoispp(lambda = Lambda_xy,
                                     win = bef_window,
-                                    nsim = 10) ## Need to make sure enough data points are generated
+                                    nsim = num_dists) ## Need to make sure enough data points are generated
 
     subj_points <- spatstat::rpoispp(lambda = Lambda_xy,
                                      win = subj_window,
-                                     nsim = 10)
+                                     nsim = num_subj)
 
 
     bef_posdata <- purrr::map2_dfr(1:length(bef_points),bef_points,function(a,b){
@@ -59,8 +57,6 @@ generate_nhpp_dataset <- function(seed = NULL,
 													  x = b$x,
 													  y = b$y)})
 
-	sample_ics <- sample(bef_posdata$sim_id,num_dists)
-	bef_posdata <- bef_posdata %>% dplyr::filter(sim_id %in% sample_ics)
 
 
 	subj_data  <- purrr::map2_dfr(1:length(subj_points),subj_points,function(a,b){
@@ -68,9 +64,8 @@ generate_nhpp_dataset <- function(seed = NULL,
 													 x_coord = b$x,
 													 y_coord = b$y)})
 
-	sample_ics  <-  sample(subj_data$sim_id,num_subj)
-	subj_data <- subj_data %>% dplyr::filter(sim_id %in% sample_ics) %>%
-		dplyr::mutate(subj_id = 1:dplyr::n())
+	subj_data <- subj_data %>%
+	    dplyr::mutate(subj_id = 1:dplyr::n())
 
 
     distances <- fields::rdist(as.matrix(subj_data)[,c("x_coord","y_coord")],
@@ -82,7 +77,7 @@ generate_nhpp_dataset <- function(seed = NULL,
         dplyr::summarise(Exposure = sum(K(Distance/theta))) %>%
         dplyr::ungroup() %>%
         dplyr::pull(Exposure)
-    sex <- rbinom(n = nrow(subj_data),size = 1,prob = .5)
+    sex <- rbinom(n = nrow(subj_data), size = 1, prob = .5)
     eta <- alpha + sex*delta + X* beta
     outcome <- rnorm(n = nrow(subj_data),mean = eta, sd = sigma)
     subj_data <- dplyr::mutate(subj_data, outcome = outcome, sex = sex)

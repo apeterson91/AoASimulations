@@ -12,6 +12,7 @@
 #' @param beta_prior prior to be placed on SAP effect
 #' @param theta_prior prior to be placed on spatial scale
 #' @param delta_prior prior to be placed on simulated binary covariate effect
+#' @param skip_MESA Boolean value that indicates whether to run MESA model or not
 #' @param iter number of iterations for which to run the stap_glm or stapdnd_glmer sampler
 #' @param warmup number of iterations to warmup the sampler
 #' @param chains number of independent MCMC chains to draw
@@ -33,6 +34,7 @@ create_table_one <- function(num_sims = 5,
                              beta_prior = rstap::normal(location = 0, scale = 3, autoscale = F),
                              theta_prior = rstap::log_normal(location = 0 , scale = 1),
                              delta_prior = rstap::normal(location = 0, scale = 3, autoscale = F),
+                             skip_MESA = FALSE,
                              iter = 4E3,
                              warmup = 2E3,
                              chains = 1,
@@ -122,78 +124,39 @@ create_table_one <- function(num_sims = 5,
                                    `Spatial Pattern` = factor(rep("NHPP",num_sims)),
                                    RMSE = purrr::map_dbl(nhpp_models,calculate_RMSE_median))
 
-    ## Matern
-    ## num subj and num dists determined randomly
-    matern_datasets <- purrr::map(1:num_sims,function(x) generate_matern_dataset(seed = x,
+
+
+
+    if(!skip_MESA){
+        ## MESA
+
+        MESA_datasets <- purrr::map(1:num_sims,function(x) generate_mesa_dataset(seed = x,
+                                                                                 num_subj = num_mesa_subj,
                                                                                  alpha = alpha,
                                                                                  theta = theta,
                                                                                  delta = delta,
-                                                                                 beta = beta))
-
-    matern_models <- purrr::map(matern_datasets,function(x){
-        rstap::stap_glm(outcome~sex + sap(FF,exp),
-                        subject_data = x$subject_data,
-                        distance_data = x$bef_data,
-                        max_distance = 10,
-                        subject_ID = "subj_id",
-                        prior = delta_prior,
-                        prior_stap = beta_prior,
-                        prior_intercept = alpha_prior,
-                        prior_theta = theta_prior,
-                        chains = chains,
-                        cores = cores,
-                        iter = iter,
-                        warmup = warmup)})
-
-    matern_output <- tibble::tibble(simulation = rep(1:num_sims,2),
-                                    `Spatial Pattern` = factor(rep("Matern",num_sims*2)),
-                                    Parameter = c(rep("Beta",num_sims),rep("Theta",num_sims)),
-                                    coverage =c(purrr::map_dbl(matern_models,function(x) check_coverage(x,c("FF"=beta))),
-                                                purrr::map_dbl(matern_models,function(x) check_coverage(x,c("FF_spatial_scale"= theta)))),
-								    Difference = c(purrr::map_dbl(matern_models,function(x) abs_diff(x,c("FF"=beta))),
-												purrr::map_dbl(matern_models,function(x) abs_diff(x,c("FF_spatial_scale"=theta)))),
-                                    `Cook & Gelman` =  c(purrr::map_dbl(matern_models,function(x) calculate_CG_stat(x,c("FF"=beta) )),
-                                                         purrr::map_dbl(matern_models,function(x) calculate_CG_stat(x,c("FF_spatial_scale"=theta)))),
-                                    interval_length = c(purrr::map_dbl(matern_models,function(x) interval_length(x,c("FF"))),
-                                                        purrr::map_dbl(matern_models,function(x) interval_length(x,c("FF_spatial_scale"))))) %>%
-        dplyr::mutate(Parameter = factor(Parameter))
+                                                                                 beta = beta,
+                                                                                 beta_bar = beta_bar,
+                                                                                 K = function(x) exp(-x)))
 
 
-    matern_output2 <- tibble::tibble(simulation = 1:num_sims,
-                                     `Spatial Pattern` = factor(rep("Matern",num_sims)),
-                                     RMSE = purrr::map_dbl(matern_models,calculate_RMSE_median))
-
-    ## MESA
-
-    MESA_datasets <- purrr::map(1:num_sims,function(x) generate_mesa_dataset(seed = x,
-                                                                             num_subj = num_mesa_subj,
-                                                                             alpha = alpha,
-                                                                             theta = theta,
-                                                                             delta = delta,
-                                                                             beta = beta,
-                                                                             beta_bar = beta_bar,
-                                                                             K = function(x) exp(-x)))
-
-
-    MESA_models <- purrr::map(MESA_datasets,function(x){
-        rstap::stapdnd_glmer(outcome~sex + sap_dnd_bar(FF,exp) + (visit_number|id),
-                             subject_data = x$subject_data,
-                             distance_data = x$bef_data,
-                             max_distance = 10,
-                             subject_ID = "id",
-                             group_ID = "visit_number",
-                             prior = delta_prior,
-                             prior_stap = beta_prior,
-                             prior_intercept = alpha_prior,
-                             prior_theta = theta_prior,
-                             chains = chains,
-                             cores = cores,
-                             iter = iter,
-                             warmup = warmup)
+        MESA_models <- purrr::map(MESA_datasets,function(x){
+            rstap::stapdnd_glmer(outcome~sex + sap_dnd_bar(FF,exp) + (visit_number|id),
+                                 subject_data = x$subject_data,
+                                 distance_data = x$bef_data,
+                                 max_distance = 10,
+                                 subject_ID = "id",
+                                 group_ID = "visit_number",
+                                 prior = delta_prior,
+                                 prior_stap = beta_prior,
+                                 prior_intercept = alpha_prior,
+                                 prior_theta = theta_prior,
+                                 chains = chains,
+                                 cores = cores,
+                                 iter = iter,
+                                 warmup = warmup)
         })
-
-
-    MESA_output <- tibble::tibble(simulation = rep(1:num_sims,2),
+        MESA_output <- tibble::tibble(simulation = rep(1:num_sims,2),
                                   `Spatial Pattern` = factor(rep("MESA data",num_sims*2)),
                                   Parameter = c(rep("Beta",num_sims),rep("Theta",num_sims)),
                                   coverage =c(purrr::map_dbl(MESA_models,function(x) check_coverage(x,c("FF_dnd"=beta))),
@@ -204,22 +167,25 @@ create_table_one <- function(num_sims = 5,
                                                        purrr::map_dbl(MESA_models,function(x) calculate_CG_stat(x,c("FF_spatial_scale"=theta),TRUE))),
                                   interval_length = c(purrr::map_dbl(MESA_models,function(x) interval_length(x,c("FF_dnd"))),
                                                       purrr::map_dbl(MESA_models,function(x) interval_length(x,c("FF_spatial_scale"))))) %>%
-        dplyr::mutate(Parameter = factor(Parameter))
+            dplyr::mutate(Parameter = factor(Parameter))
 
 
-    MESA_output2 <- tibble::tibble(simulation = 1:num_sims,
+        MESA_output2 <- tibble::tibble(simulation = 1:num_sims,
                                    `Spatial Pattern` = factor(rep("MESA data",num_sims)),
                                    RMSE = purrr::map_dbl(MESA_models,calculate_RMSE_median))
+        output <- rbind(hpp_output,nhpp_output,MESA_output)
 
+        output2 <- rbind(hpp_output2,nhpp_output2,MESA_output2)
+    }
+    else{
+        output <- rbind(hpp_output,nhpp_output)
+        output2 <- rbind(hpp_output2,nhpp_output2)
+    }
 
-
-    output <- rbind(hpp_output,nhpp_output,matern_output,MESA_output)
-
-    output2 <- rbind(hpp_output2,nhpp_output2,matern_output2,MESA_output2)
-
+    standard_error <- function(x) sd(x)/sqrt(length(x))
     require(tables)
     tab1a <- tabular( Format(digits=2)*
-                          (interval_length + coverage + Difference)*(Parameter)*(mean + sd) +
+                          (interval_length + coverage + Difference)*(Parameter)*(mean + standard_error) +
                           Format(digits=2)*(`Cook & Gelman`)*(Parameter)*(sum) ~ (`Spatial Pattern`) ,
                       data = output )
 

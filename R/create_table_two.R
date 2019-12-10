@@ -385,14 +385,14 @@ create_table_two <- function(num_sims = 5,
                                 Simulated_Function = rep("Step Function",num_sims),
                                 Modeled_Function = rep("Exponential", num_sims),
                                 True_termination = theta,
-                                Estimate_termination = purrr::map_dbl(de,function(x) rstap::stap_termination(x,max_value=1E8)[2]))
+                                Estimate_termination = purrr::map_dbl(de,function(x) rstap::stap_termination(x,max_value=10)[2]))
 
 
     term_step_w <- tibble::tibble(sim_id = 1:num_sims,
                                 Simulated_Function = rep("Step Function",num_sims),
                                 Modeled_Function = rep("Weibull", num_sims),
                                 True_termination = theta,
-                                Estimate_termination = purrr::map_dbl(dw,function(x) rstap::stap_termination(x,max_value=1E8)[2]))
+                                Estimate_termination = purrr::map_dbl(dw,function(x) rstap::stap_termination(x,max_value=10)[2]))
 
 
     term_q_d <- tibble::tibble(sim_id = 1:num_sims,
@@ -406,14 +406,14 @@ create_table_two <- function(num_sims = 5,
                               Simulated_Function = rep("Quadratic Step",num_sims),
                               Modeled_Function = rep("Exponential", num_sims),
                               True_termination = theta,
-                              Estimate_termination = purrr::map_dbl(d2e,function(x) rstap::stap_termination(x,max_value=1E8)[2]))
+                              Estimate_termination = purrr::map_dbl(d2e,function(x) rstap::stap_termination(x,max_value=10)[2]))
 
 
     term_q_w <- tibble::tibble(sim_id = 1:num_sims,
                                  Simulated_Function = rep("Quadratic Step",num_sims),
                                  Modeled_Function = rep("Weibull", num_sims),
                                  True_termination = theta,
-                                 Estimate_termination = purrr::map_dbl(d2w,function(x) rstap::stap_termination(x,max_value=1E8)[2]))
+                                 Estimate_termination = purrr::map_dbl(d2w,function(x) rstap::stap_termination(x,max_value=10)[2]))
 
     term_e_d <- tibble::tibble(sim_id = 1:num_sims,
                                  Simulated_Function = "Exponential",
@@ -425,14 +425,14 @@ create_table_two <- function(num_sims = 5,
                                 Simulated_Function = rep("Exponential",num_sims),
                                 Modeled_Function = rep("Exponential",num_sims),
                                 True_termination = uniroot(function(x) exp(-(x/theta)) - 0.05,interval = c(0,10))$root,
-                                Estimate_termination = purrr::map_dbl(ee,function(a) rstap::stap_termination(a,max_value=1E8)[2])
+                                Estimate_termination = purrr::map_dbl(ee,function(a) rstap::stap_termination(a,max_value=10)[2])
     )
 
     term_e_w <- tibble::tibble(sim_id = 1:num_sims,
                                   Simulated_Function = rep("Exponential",num_sims),
                                   Modeled_Function = rep("Weibull",num_sims),
                                   True_termination = uniroot(function(x) exp(-(x/theta)) - 0.05,interval = c(0,10))$root,
-                                  Estimate_termination = purrr::map_dbl(ew,function(a) rstap::stap_termination(a,max_value=1E8)[2])
+                                  Estimate_termination = purrr::map_dbl(ew,function(a) rstap::stap_termination(a,max_value=10)[2])
     )
 
     term_w_d <- tibble::tibble(sim_id = 1:num_sims,
@@ -445,14 +445,14 @@ create_table_two <- function(num_sims = 5,
                                   Simulated_Function = rep("Weibull",num_sims),
                                   Modeled_Function = rep("Exponential",num_sims),
                                   True_termination = uniroot(function(x){ exp(-(x/theta)^shape) - 0.05},interval = c(0,10))$root,
-                                  Estimate_termination = purrr::map_dbl(we,function(a) rstap::stap_termination(a,max_value=1E8)[2])
+                                  Estimate_termination = purrr::map_dbl(we,function(a) rstap::stap_termination(a,max_value=10)[2])
     )
 
     term_wei <- tibble::tibble(sim_id = 1:num_sims,
                                         Simulated_Function = rep("Weibull",num_sims),
                                         Modeled_Function = rep("Weibull",num_sims),
                                         True_termination = uniroot(function(x){ exp(-(x/theta)^shape) - 0.05},interval = c(0,10))$root,
-                                        Estimate_termination = purrr::map_dbl(ww,function(a) rstap::stap_termination(a,max_value=1E8)[2])
+                                        Estimate_termination = purrr::map_dbl(ww,function(a) rstap::stap_termination(a,max_value=10)[2])
     )
 
     out <- dplyr::bind_rows(term_step_d,term_step_e,term_step_w,
@@ -461,7 +461,7 @@ create_table_two <- function(num_sims = 5,
                             term_w_d,term_w_e,term_wei) %>%
             dplyr::mutate(Termination_Difference=abs(True_termination - Estimate_termination)) %>%
             dplyr::group_by(Simulated_Function,Modeled_Function) %>%
-            dplyr::summarise(mean_difference = mean(Termination_Difference)) %>%
+            dplyr::summarise(mean_difference = 100*mean(Termination_Difference)) %>%
             dplyr::ungroup() %>%
             tidyr::spread(Modeled_Function,mean_difference) %>%
         dplyr::select(Simulated_Function,Exponential,Weibull,DLM)
@@ -471,7 +471,7 @@ create_table_two <- function(num_sims = 5,
                                  term_e_d,term_exp,term_e_w,
                                  term_w_d,term_w_e,term_wei) %>%
         dplyr::mutate(Termination_Difference=abs(True_termination - Estimate_termination),
-                      Percent_Difference = Termination_Difference/True_termination)
+                      Percent_Difference = (Termination_Difference/True_termination)*100 )
 
 
 
@@ -534,7 +534,7 @@ create_table_two <- function(num_sims = 5,
     term_wei <- tibble::tibble(sim_id = 1:num_sims,
                                Simulated_Function = rep("Weibull",num_sims),
                                Modeled_Function = rep("Weibull",num_sims),
-                               True_beta = uniroot(function(x){ exp(-(x/theta)^shape) - 0.05},interval = c(0,10))$root,
+                               True_beta = beta,
                                Estimate_beta = purrr::map_dbl(ww,function(a) coef(a)["FF"])
     )
 
@@ -545,7 +545,7 @@ create_table_two <- function(num_sims = 5,
         dplyr::mutate(Effect_Difference = abs(True_beta - Estimate_beta),
                       Percent_Difference = Effect_Difference/True_beta) %>%
         dplyr::group_by(Simulated_Function,Modeled_Function) %>%
-        dplyr::summarise(mean_difference = mean(Percent_Difference)) %>%
+        dplyr::summarise(mean_difference = 100*mean(Percent_Difference)) %>%
         dplyr::ungroup() %>%
         tidyr::spread(Modeled_Function,mean_difference) %>%
         dplyr::select(Simulated_Function,Exponential,Weibull)
@@ -556,7 +556,7 @@ create_table_two <- function(num_sims = 5,
                                        term_exp,term_e_w,
                                        term_w_e,term_wei) %>%
         dplyr::mutate(Effect_Difference = abs(True_beta - Estimate_beta),
-                      Percent_Difference = Effect_Difference/True_beta)
+                      Percent_Difference = (Effect_Difference/True_beta)*100)
 
 
 # Return values -----------------------------------------------------------
