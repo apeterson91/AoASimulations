@@ -37,7 +37,7 @@ abs_diff  <- function(model,par){
 
 	estimates <- apply(as.matrix(model)[,nm,drop = FALSE],2,median)
 
-	return(abs(estimates - par))
+	return((abs(estimates - par) / par )*100)
 }
 
 

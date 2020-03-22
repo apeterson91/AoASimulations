@@ -1,6 +1,6 @@
 Package: STAPSimulations
 Type: Package
-Title: Recreates Tables in Peterson et al. Annals of Applied Statistics paper.
+Title: Recreates Simulations in Peterson et al. manuscript
 Version: 0.1.0
 Authors@R: person("Adam", "Peterson", , "atpvyc@umich.edu", c("aut", "cre"))
 Description: This package contains functions used to simulate and fit datasets to test STAP models.

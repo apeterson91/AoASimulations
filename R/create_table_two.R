@@ -1,4 +1,4 @@
-#' create_table_two
+#' create datasets for sample size for second simulation figure
 #'
 #' @param num_sims number of simulations to run
 #' @param num_subj number of subjects to simulate
@@ -459,7 +459,7 @@ create_table_two <- function(num_sims = 5,
                             term_q_d, term_q_e,term_q_w,
                             term_e_d,term_exp,term_e_w,
                             term_w_d,term_w_e,term_wei) %>%
-            dplyr::mutate(Termination_Difference=abs(True_termination - Estimate_termination)) %>%
+            dplyr::mutate(Termination_Difference=abs(True_termination - Estimate_termination)/True_termination ) %>%
             dplyr::group_by(Simulated_Function,Modeled_Function) %>%
             dplyr::summarise(mean_difference = 100*mean(Termination_Difference)) %>%
             dplyr::ungroup() %>%
@@ -470,8 +470,8 @@ create_table_two <- function(num_sims = 5,
                                  term_q_d, term_q_e,term_q_w,
                                  term_e_d,term_exp,term_e_w,
                                  term_w_d,term_w_e,term_wei) %>%
-        dplyr::mutate(Termination_Difference=abs(True_termination - Estimate_termination),
-                      Percent_Difference = (Termination_Difference/True_termination)*100 )
+        dplyr::mutate(Termination_Difference=abs(True_termination - Estimate_termination)/True_termination,
+                      Percent_Difference = (Termination_Difference)*100 )
 
 
 
@@ -555,8 +555,8 @@ create_table_two <- function(num_sims = 5,
                                         term_q_e,term_q_w,
                                        term_exp,term_e_w,
                                        term_w_e,term_wei) %>%
-        dplyr::mutate(Effect_Difference = abs(True_beta - Estimate_beta),
-                      Percent_Difference = (Effect_Difference/True_beta)*100)
+        dplyr::mutate(Effect_Difference = abs(True_beta - Estimate_beta)/True_beta,
+                      Percent_Difference = (Effect_Difference)*100)
 
 
 # Return values -----------------------------------------------------------
