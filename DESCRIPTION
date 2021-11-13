@@ -16,7 +16,5 @@ Imports:
     tidyr,
     purrr,
     rstap (>= 1.1.3),
-    tables,
-    dlmBE
 Remotes: 
     Biostatistics4socialimpact/rstap
