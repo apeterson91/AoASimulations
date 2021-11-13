@@ -1,6 +1,7 @@
 #' generates stap dataset using MESA HFS-cohort distances
 #'
 #' @param seed an integer for set.seed()
+#' @param MESA dataframe consisting of 4 columns: idno, visit_number, Distance, Time
 #' @param num_subj number of subjects to simulate
 #' @param prop_dist proportion of MESA distances to use -
 #' set to 1 for all MESA distances, or smaller to speed model fitting time
@@ -13,60 +14,72 @@
 #'
 #' @export
 generate_mesa_dataset <- function(seed = NULL,
+                                  MESA = NULL,
                                   num_subj = 100,
-								  prop_dist = .95,
-                                  max_dist = 10,
-                                  alpha = 23,
-                                  delta = -2.2,
-                                  beta = .1,
-                                  beta_bar = .5,
-                                  theta = .7,
-                                  sigma = 1,
-                                  K = function(x) exp(-x)){
-    ### fake gender covariate
-
+                                  pars,
+                                  K = function(d,t,
+                                               shape_one = 1,
+                                               scale_one = .5,
+                                               shape_two = 1,
+                                               scale_two = 1) {
+                                      pweibull(d,
+                                               shape = shape_one, 
+                                               scale = scale_one,
+                                               lower.tail = FALSE) *
+                                          pweibull(t,
+                                                   shape = shape_two,
+                                                   scale = scale_two,
+                                                   lower.tail = TRUE)}
+                                  )
+{
+                                  
     if(!is.null(seed))
         set.seed(seed)
     else
         set.seed(3224314)
 
-    if(is.null(num_subj)){
-        num_subj = length(unique(MESA$id))
-        MESA_df <- MESA
-    }
-    else{
-        D <- uniroot(function(y) K(y) - 0.05,c(0,10))$root + 1
-        idno <- MESA %>% dplyr::select(id) %>% dplyr::pull() %>%
-            sample(.,size=num_subj,replace=F)
-        MESA_df <- MESA %>% dplyr::filter(id %in% idno, Total_Kilometers<=D) %>%
-			dplyr::group_by(id,visit_number) %>% dplyr::sample_frac(prop_dist) %>% dplyr::ungroup()
-    }
-
-    X <- MESA_df %>% dplyr::group_by(id,visit_number) %>%
-        dplyr::summarise(Exposure = sum(K((Total_Kilometers / theta))) ) %>%
+    idno <- MESA %>% 
+        dplyr::select(id) %>% 
+        dplyr::pull() %>%
+        sample(., size = num_subj, replace = F)
+    
+    MESA_df <- MESA %>% 
+        dplyr::filter(id %in% idno) %>%
+        dplyr::group_by(id,visit_number) %>%
+        dplyr::summarise(Exposure = sum(K(Distance,Time,
+                                          shape_one = pars$shape_one,
+                                          shape_two = pars$shape_two,
+                                          scale_one = pars$scale_one,
+                                          scale_two = pars$scale_two))) %>% 
+        dplyr::group_by(id) %>% 
+        dplyr::mutate(Xbar = mean(Exposure),
+                      Xdnd =  Exposure - Xbar) %>% 
+        dplyr::left_join(MESA %>% 
+                             dplyr::distinct(id) %>% 
+                             dplyr::mutate(Sex = rbinom(n = dplyr::n(), size = 1, prob = 0.5),
+                                           intercept = rnorm(n = dplyr::n(), sd = .25),
+                                           slope = rnorm(n = dplyr::n(), sd = .35))
+                         ) %>% 
         dplyr::ungroup()
 
-    Xbar <- X %>% dplyr::group_by(id) %>%
-        dplyr::summarise(Mean_Exposure = mean(Exposure)) %>%
-        dplyr::mutate(Sex = rbinom(n=dplyr::n(),size=1,prob=.5),
-                         intercept = rnorm(n = dplyr::n(),sd = 1),
-                         slope = rnorm(n=dplyr::n(), sd=1.2))
+    eta <- pars$alpha + 
+       MESA_df$Sex * pars$delta + 
+        MESA_df$Xdnd * pars$beta_w + 
+        MESA_df$Xbar * pars$beta_bar +
+        MESA_df$intercept + 
+        MESA_df$visit_number * MESA_df$slope 
 
-    X_diff <- X %>% dplyr::left_join(Xbar,by='id') %>%
-        dplyr::mutate(X_diff = Exposure - Mean_Exposure,)
-
-    eta <- alpha + delta * X_diff$Sex + X_diff$X_diff*beta + X_diff$Mean_Exposure*beta_bar +
-        X_diff$intercept + X_diff$slope * X_diff$visit_number
-
-    subj_data <- tibble::tibble(outcome = rnorm(n = nrow(X_diff),mean = eta,sd = sigma),
-                              sex = X_diff$Sex,
-                              id = X_diff$id,
-                              visit_number = X_diff$visit_number
+    subj_data <- tibble::tibble(outcome = eta,
+                                sex = MESA_df$Sex,
+                                id = MESA_df$id,
+                                intercept = MESA_df$intercept,
+                                slope = MESA_df$slope,
+                                visit_number = MESA_df$visit_number
     )
 
-    bef_data <- MESA_df %>%
+    bef_data <- MESA %>%
         dplyr::mutate(visit_number = as.integer(visit_number),
-               BEF = "FF")
+                      BEF = "FF")
 
     return(list(subject_data = subj_data,
                 bef_data =  bef_data,

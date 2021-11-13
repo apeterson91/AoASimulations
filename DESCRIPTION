@@ -8,7 +8,7 @@ License: MIT
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
 Imports: 
     magrittr,
     dplyr,
@@ -17,7 +17,6 @@ Imports:
     purrr,
     rstap (>= 1.1.3),
     tables,
-    Hmisc,
     dlmBE
 Remotes: 
     Biostatistics4socialimpact/rstap

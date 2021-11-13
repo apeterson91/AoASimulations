@@ -4,14 +4,24 @@
 \alias{generate_mesa_dataset}
 \title{generates stap dataset using MESA HFS-cohort distances}
 \usage{
-generate_mesa_dataset(seed = NULL, num_subj = 100, prop_dist = 0.95,
-  max_dist = 10, alpha = 23, delta = -2.2, beta = 0.1,
-  beta_bar = 0.5, theta = 0.7, sigma = 1, K = function(x) exp(-x))
+generate_mesa_dataset(
+  seed = NULL,
+  MESA = NULL,
+  num_subj = 100,
+  pars,
+  K = function(d, t, shape_one = 1, scale_one = 0.5, shape_two = 1, scale_two = 1) {   
+     pweibull(d, shape = shape_one, scale = scale_one, lower.tail = FALSE) * pweibull(t,
+    shape = shape_two, scale = scale_two, lower.tail = TRUE) }
+)
 }
 \arguments{
 \item{seed}{an integer for set.seed()}
 
+\item{MESA}{dataframe consisting of 4 columns: idno, visit_number, Distance, Time}
+
 \item{num_subj}{number of subjects to simulate}
+
+\item{K}{exposure function}
 
 \item{prop_dist}{proportion of MESA distances to use -
 set to 1 for all MESA distances, or smaller to speed model fitting time}
@@ -25,8 +35,6 @@ set to 1 for all MESA distances, or smaller to speed model fitting time}
 \item{beta}{true bef effect}
 
 \item{theta}{true spatial scale}
-
-\item{K}{exposure function}
 }
 \description{
 generates stap dataset using MESA HFS-cohort distances

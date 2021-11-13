@@ -4,12 +4,22 @@
 \alias{generate_nhpp_table_one}
 \title{generates nonhomogenous poisson process data without residual error for table one}
 \usage{
-generate_nhpp_table_one(seed = NULL, num_subj_realizations = 10L,
-  num_dist_realizations = 4L, Lambda_xy = function(x, y) {     (3 - x^2
-  - y^2) }, bef_xlim = c(-1, 1), bef_ylim = c(-1, 1),
-  subj_xlim = c(-1, 1), subj_ylim = c(-1, 1), alpha = 23,
-  delta = -2.2, beta = 0.75, theta = 0.5, sigma = 1,
-  K = function(x) exp(-x))
+generate_nhpp_table_one(
+  seed = NULL,
+  num_subj_realizations = 10L,
+  num_dist_realizations = 4L,
+  Lambda_xy = function(x, y) {     (3 - x^2 - y^2) },
+  bef_xlim = c(-1, 1),
+  bef_ylim = c(-1, 1),
+  subj_xlim = c(-1, 1),
+  subj_ylim = c(-1, 1),
+  alpha = 23,
+  delta = -2.2,
+  beta = 0.75,
+  theta = 0.5,
+  sigma = 1,
+  K = function(x) exp(-x)
+)
 }
 \arguments{
 \item{seed}{an integer for set.seed()}

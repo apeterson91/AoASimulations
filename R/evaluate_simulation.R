@@ -9,7 +9,7 @@ check_coverage <- function(model,true_par,prob = .90,nonzero = T){
         stop("Parameter"," ", names(true_par)," ","Not included in model, please try again")
     CI <- rstap::posterior_interval(model,par = names(true_par),prob = prob)
     if(nonzero)
-        return( (CI[1]<=true_par && CI[2]>=true_par) && ( CI[2]<=0 || CI[1]>=0  ))
+        return( (CI[1]<=true_par && CI[2]>=true_par) && ( CI[2] <= 0 || CI[1] >= 0  ))
     else
         return((CI[1]<=true_par && CI[2]>=true_par))
 }
@@ -66,7 +66,7 @@ calculate_CG_stat <- function(model,par,mer=FALSE){
     else{
         if(!(nm %in% names(coef(model)[[1]])))
             stop("par must be a coefficient name estimated in first group of model")
-        return(qnorm(mean(as.matrix(model)[,nm,drop=TRUE]>par), mean=0, sd = 1)^2)
+        return(qnorm(mean(as.matrix(model)[,nm,drop=TRUE]>par), mean = 0, sd = 1)^2)
     }
 }
 

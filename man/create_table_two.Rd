@@ -2,15 +2,27 @@
 % Please edit documentation in R/create_table_two.R
 \name{create_table_two}
 \alias{create_table_two}
-\title{create_table_two}
+\title{create datasets for sample size for second simulation figure}
 \usage{
-create_table_two(num_sims = 5, num_subj = 100, num_dists = 30,
-  alpha = 23, theta = 0.5, shape = 5, delta = -2.2, beta = 0.75,
+create_table_two(
+  num_sims = 5,
+  num_subj = 100,
+  num_dists = 30,
+  alpha = 23,
+  theta = 0.5,
+  shape = 5,
+  delta = -2.2,
+  beta = 0.75,
   alpha_prior = rstap::normal(location = 25, scale = 4, autoscale = F),
   beta_prior = rstap::normal(location = 0, scale = 3, autoscale = F),
   theta_prior = rstap::log_normal(location = 0, scale = 1),
   delta_prior = rstap::normal(location = 0, scale = 3, autoscale = F),
-  iter = 4000, warmup = 2000, chains = 1, cores = 1, file = NULL)
+  iter = 4000,
+  warmup = 2000,
+  chains = 1,
+  cores = 1,
+  file = NULL
+)
 }
 \arguments{
 \item{num_sims}{number of simulations to run}
@@ -49,5 +61,5 @@ create_table_two(num_sims = 5, num_subj = 100, num_dists = 30,
 list with 4 values, the raw and summary differences in beta and terminal distance
 }
 \description{
-create_table_two
+create datasets for sample size for second simulation figure
 }
