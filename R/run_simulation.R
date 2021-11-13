@@ -1,8 +1,6 @@
 
 #' @param num_sims number of simulations to run
-#' @param num_subj_processes number of subject processes to simulate
-#' @param num_dists_processes number of distance processes to simulate
-#' @param num_mesa_subj number of subjects to sample from MESA data for MESA analysis
+#' @param num_subj number of subjects to sample from MESA data for MESA analysis
 #' @param alpha intercept for generating outcome
 #' @param theta true spatial scale under which datasets
 #' @param delta simulated binary covariate regression effect
@@ -11,7 +9,6 @@
 #' @param beta_prior prior to be placed on SAP effect
 #' @param theta_prior prior to be placed on spatial scale
 #' @param delta_prior prior to be placed on simulated binary covariate effect
-#' @param skip_MESA Boolean value that indicates whether to run MESA model or not
 #' @param iter number of iterations for which to run the stap_glm or stapdnd_glmer sampler
 #' @param warmup number of iterations to warmup the sampler
 #' @param chains number of independent MCMC chains to draw
@@ -22,6 +19,7 @@
 #' The remaining "raw" table component contains the pre-aggregation data-frames
 #' @export
 run_simulation <- function(num_sims = 5,
+                           data, 
                            num_subj = 100L,
                            pars = list(alpha = 23,
                                        shape_one = 1,
@@ -58,11 +56,8 @@ run_simulation <- function(num_sims = 5,
         set.seed(seed)
     }
   
-  MESA_ <- MESA %>% 
-    dplyr::rename(Distance = Total_Kilometers) %>% 
-    dplyr::mutate(Time = rexp(dplyr::n(),2))
   
-  mdf <- generate_mesa_dataset(MESA = MESA_,pars = pars)
+  mdf <- generate_mesa_dataset(MESA = data,pars = pars)
   
   simdf <- purrr::map_dfr(1:num_sims,function(x) .fit_and_process_stap(sim_ix = x,
                                                                        data = mdf,
