@@ -39,7 +39,7 @@ generate_mesa_dataset <- function(seed = NULL,
         set.seed(3224314)
 
     idno <- MESA %>% 
-        dplyr::select(id) %>% 
+        dplyr::distinct(id) %>% 
         dplyr::pull() %>%
         sample(., size = num_subj, replace = F)
     
