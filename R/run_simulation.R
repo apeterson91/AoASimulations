@@ -57,7 +57,7 @@ run_simulation <- function(num_sims = 5,
     }
   
   
-  mdf <- generate_mesa_dataset(MESA = data,pars = pars)
+  mdf <- generate_mesa_dataset(MESA = data,pars = pars, num_subj = num_subj)
   
   simdf <- purrr::map_dfr(1:num_sims,function(x) .fit_and_process_stap(sim_ix = x,
                                                                        data = mdf,
