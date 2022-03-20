@@ -60,7 +60,7 @@ generate_mesa_dataset <- function(seed = NULL,
                              dplyr::mutate(Sex = rbinom(n = dplyr::n(), size = 1, prob = 0.5),
                                            intercept = rnorm(n = dplyr::n(), sd = .25),
                                            slope = rnorm(n = dplyr::n(), sd = .35))
-                         ) %>% 
+                         , by = 'id') %>% 
         dplyr::ungroup()
 
     eta <- pars$alpha + 

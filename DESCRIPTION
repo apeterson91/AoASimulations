@@ -18,3 +18,6 @@ Imports:
     rstap (>= 1.1.3),
 Remotes: 
     Biostatistics4socialimpact/rstap
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

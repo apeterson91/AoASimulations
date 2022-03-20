@@ -38,7 +38,7 @@ run_simulation <- function(num_sims = 5,
                                                                scale = 3,
                                                                autoscale = FALSE),
                                             theta = rstap::log_normal(location = 0,
-                                                                      scale = 1),
+                                                                      scale = .75),
                                             delta = rstap::normal(location = 0,
                                                                   scale = 3,
                                                                   autoscale = FALSE)
@@ -141,10 +141,9 @@ run_simulation <- function(num_sims = 5,
   print(fit)
   post_pars_all <- as.matrix(fit)
   parnms <- colnames(post_pars_all)
-  ix <- stringr::str_which(parnms,"scale|FF")
+  ix <- stringr::str_which(parnms,"FF")
   parnms <- parnms[ix]
-  ## need to fix name par length mismatch bug
-  ps <- c(pars$beta_w,pars$beta_bar,pars$scale_one,pars$scale_two)
+  ps <- c(pars$beta,pars$scale_one,pars$scale_two)
   names(ps) <- parnms
   post_pars <- post_pars_all[,parnms]
   pss <- nrow(post_pars)
@@ -183,7 +182,7 @@ run_simulation <- function(num_sims = 5,
   out <- dplyr::tibble(sim_ix = sim_ix,
                        Parameter = c("beta","theta_s",
                                      "theta_t","shape_s","shape_t"),
-                       Truth = c(ps[1],ps[2],ps[3],ps[4],
+                       Truth = c(ps[1],ps[2],ps[3],
                                  pars$shape_one,pars$shape_two),
                        Est = c(apply(post_pars,2,median),
                                median(shape_one),median(shape_two)),
@@ -194,31 +193,26 @@ run_simulation <- function(num_sims = 5,
                        KLD = c(KLD(prior_beta,post_pars[,1]),
                                KLD(prior_beta,post_pars[,2]),
                                KLD(prior_theta,post_pars[,3]),
-                               KLD(prior_theta,post_pars[,4]),
                                so_KLD,st_KLD
                                ),
-                       CG = c(calculate_CG_stat(fit,ps[1], mer = TRUE),
-                              calculate_CG_stat(fit,ps[2], mer = TRUE),
-                              calculate_CG_stat(fit,ps[3], mer = TRUE),
-                              calculate_CG_stat(fit,ps[4], mer = TRUE),
+                       CG = c(calculate_CG_stat(fit, ps[1], mer = TRUE),
+                              calculate_CG_stat(fit, ps[2], mer = TRUE),
+                              calculate_CG_stat(fit, ps[3], mer = TRUE),
                               so_cg,st_cg
                              ),
-                       Coverage = c(check_coverage(fit,ps[1]),
-                                    check_coverage(fit,ps[2]),
-                                    check_coverage(fit,ps[3]),
-                                    check_coverage(fit,ps[4]),
+                       Coverage = c(check_coverage(fit, ps[1]),
+                                    check_coverage(fit, ps[2]),
+                                    check_coverage(fit, ps[3]),
                                     so_co,st_co
                                      ),
-                       Interval = c(interval_length(fit,parnms[1]),
-                                    interval_length(fit,parnms[2]),
-                                    interval_length(fit,parnms[3]),
-                                    interval_length(fit,parnms[4]),
+                       Interval = c(interval_length(fit, parnms[1]),
+                                    interval_length(fit, parnms[2]),
+                                    interval_length(fit, parnms[3]),
                                     so_int,st_int
                                     ),
-                       abs_diff = c(abs_diff(fit,ps[1]),
-                                    abs_diff(fit,ps[2]),
-                                    abs_diff(fit,ps[3]),
-                                    abs_diff(fit,ps[4]),
+                       abs_diff = c(abs_diff(fit, ps[1]),
+                                    abs_diff(fit, ps[2]),
+                                    abs_diff(fit, ps[3]),
                                     so_diff,st_diff
                                     ),
                        WAIC = rstap::waic(fit)
