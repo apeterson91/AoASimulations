@@ -26,10 +26,11 @@ generate_mesa_dataset <- function(seed = NULL,
                                                shape = shape_one, 
                                                scale = scale_one,
                                                lower.tail = FALSE) *
-                                          pweibull(t,
-                                                   shape = shape_two,
-                                                   scale = scale_two,
-                                                   lower.tail = TRUE)}
+                                      pweibull(t,
+                                               shape = shape_two,
+                                               scale = scale_two,
+                                               lower.tail = TRUE)
+                                      }
                                   )
 {
                                   
@@ -37,6 +38,9 @@ generate_mesa_dataset <- function(seed = NULL,
         set.seed(seed)
     else
         set.seed(3224314)
+    if(is.null(MESA) || !is.data.frame(MESA))
+        stop("MESA data.frame required")
+        
 
     idno <- MESA %>% 
         dplyr::distinct(id) %>% 
@@ -51,9 +55,6 @@ generate_mesa_dataset <- function(seed = NULL,
                                           shape_two = pars$shape_two,
                                           scale_one = pars$scale_one,
                                           scale_two = pars$scale_two))) %>% 
-        dplyr::group_by(id) %>% 
-        dplyr::mutate(Xbar = mean(Exposure),
-                      Xdnd =  Exposure - Xbar) %>% 
         dplyr::left_join(MESA %>% 
                              dplyr::distinct(id) %>% 
                              dplyr::mutate(Sex = rbinom(n = dplyr::n(), size = 1, prob = 0.5),
@@ -64,8 +65,7 @@ generate_mesa_dataset <- function(seed = NULL,
 
     eta <- pars$alpha + 
        MESA_df$Sex * pars$delta + 
-        MESA_df$Xdnd * pars$beta_w + 
-        MESA_df$Xbar * pars$beta_bar +
+        MESA_df$Exposure * pars$beta + 
         MESA_df$intercept + 
         MESA_df$visit_number * MESA_df$slope 
 

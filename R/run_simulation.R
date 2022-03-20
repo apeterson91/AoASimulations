@@ -9,7 +9,7 @@
 #' @param beta_prior prior to be placed on SAP effect
 #' @param theta_prior prior to be placed on spatial scale
 #' @param delta_prior prior to be placed on simulated binary covariate effect
-#' @param iter number of iterations for which to run the stap_glm or stapdnd_glmer sampler
+#' @param iter number of iterations for which to run the stap_glm sampler
 #' @param warmup number of iterations to warmup the sampler
 #' @param chains number of independent MCMC chains to draw
 #' @param cores number of cores with which to run chains in parallel
@@ -27,8 +27,7 @@ run_simulation <- function(num_sims = 5,
                                        shape_two = 1,
                                        scale_two = .3,
                                        delta = -2.2,
-                                       beta_bar = .8,
-                                       beta_w = 1.2, 
+                                       beta = 1.2,
                                        sigma = 1),
                            modeled_K = c("exp","exp"),
                            priors = list(
@@ -89,7 +88,7 @@ run_simulation <- function(num_sims = 5,
   
   ## modeled function
   if(modeled_K[1] == "exp" & modeled_K[2] == "exp"){
-    f <- outcome ~ sex  + stap_dnd_bar(FF,exp,cexp) + (visit_number|id)
+    f <- outcome ~ sex  + stap(FF,exp,cexp) + (visit_number|id)
     shape_one <- 1
     shape_two <- 1
     so_KLD <- NA
@@ -103,7 +102,7 @@ run_simulation <- function(num_sims = 5,
     so_diff <- NA
     st_diff <- NA
   }else if(modeled_K[1] == "wei" && modeled_K[2] == "exp"){
-    f <- outcome ~ sex  + stap_dnd_bar(FF,wei,cexp) + (visit_number|id)
+    f <- outcome ~ sex  + stap(FF,wei,cexp) + (visit_number|id)
     shape_two <- 1
     st_KLD <- NA
     st_co <- NA
@@ -112,10 +111,10 @@ run_simulation <- function(num_sims = 5,
     st_diff <- NA
   }
   else{
-    f <- outcome ~ sex  + stap_dnd_bar(FF,wei,cwei) + (visit_number|id)
+    f <- outcome ~ sex  + stap(FF,wei,cwei) + (visit_number|id)
   } 
   
-  fit <- rstap::stapdnd_glmer(f,
+  fit <- rstap::stap_glmer(f,
                              subject_data = data$subject_data %>% 
                                dplyr::mutate(outcome = outcome + 
                                                rnorm(dplyr::n(),
@@ -142,7 +141,7 @@ run_simulation <- function(num_sims = 5,
   print(fit)
   post_pars_all <- as.matrix(fit)
   parnms <- colnames(post_pars_all)
-  ix <- stringr::str_which(parnms,"scale|bar|dnd")
+  ix <- stringr::str_which(parnms,"scale|FF")
   parnms <- parnms[ix]
   ## need to fix name par length mismatch bug
   ps <- c(pars$beta_w,pars$beta_bar,pars$scale_one,pars$scale_two)
@@ -182,7 +181,7 @@ run_simulation <- function(num_sims = 5,
   
   
   out <- dplyr::tibble(sim_ix = sim_ix,
-                       Parameter = c("beta_bar","beta_dnd","theta_s",
+                       Parameter = c("beta","theta_s",
                                      "theta_t","shape_s","shape_t"),
                        Truth = c(ps[1],ps[2],ps[3],ps[4],
                                  pars$shape_one,pars$shape_two),
