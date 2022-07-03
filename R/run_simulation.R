@@ -142,6 +142,7 @@ run_simulation <- function(num_sims = 5,
   post_pars_all <- as.matrix(fit)
   parnms <- colnames(post_pars_all)
   ix <- stringr::str_which(parnms,"FF")
+  ix <- setdiff(ix,stringr::str_which(parnms,"shape"))
   parnms <- parnms[ix]
   ps <- c(pars$beta,pars$scale_one,pars$scale_two)
   names(ps) <- parnms

@@ -7,7 +7,7 @@
 check_coverage <- function(model,true_par,prob = .90,nonzero = T){
     if(!all(names(true_par)%in%rownames(rstap::posterior_interval(model))))
         stop("Parameter"," ", names(true_par)," ","Not included in model, please try again")
-    CI <- rstap::posterior_interval(model,par = names(true_par),prob = prob)
+    CI <- rstap::posterior_interval(model, par = names(true_par), prob = prob)
     if(nonzero)
         return( (CI[1]<=true_par && CI[2]>=true_par) && ( CI[2] <= 0 || CI[1] >= 0  ))
     else
